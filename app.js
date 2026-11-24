@@ -62,7 +62,140 @@ const SAMPLE_C = `[2024-10-31 11:32:04] INFO  Starting dev server on http://loca
 
 // --- ANALYZER ---
 
-// (Implemented in task 2.x)
+/**
+ * analyzeSurface(logText)
+ * Scans a log string for the first recognisable minor/surface-level issue and
+ * returns a SurfaceFinding.  Patterns are tested in priority order; a generic
+ * fallback fires when none match.
+ *
+ * @param {string} logText
+ * @returns {{ type: string, label: string, matchedText: string }}
+ */
+function analyzeSurface(logText) {
+  const checks = [
+    { pattern: /ReferenceError/i,       type: 'ReferenceError',    label: 'Undefined variable reference' },
+    { pattern: /Cannot read propert/i,  type: 'NullDereference',   label: 'Null dereference'             },
+    { pattern: /Uncaught/i,             type: 'UncaughtException', label: 'Uncaught exception'            },
+    { pattern: /Maximum call stack/i,   type: 'StackOverflow',     label: 'Stack overflow'                },
+    { pattern: /timeout|ETIMEDOUT/i,    type: 'NetworkTimeout',    label: 'Network timeout'               },
+  ];
+
+  const lines = logText.split('\n');
+
+  for (const { pattern, type, label } of checks) {
+    for (const line of lines) {
+      if (pattern.test(line)) {
+        return { type, label, matchedText: line };
+      }
+    }
+  }
+
+  // Generic fallback — always fires so the calm beat can still occur (Req 3.4).
+  return { type: 'Generic', label: 'Unexpected runtime error', matchedText: '' };
+}
+
+
+/**
+ * analyzeHidden(logText)
+ * Scans a log string for critical hidden patterns.  Patterns are tested in
+ * priority order; the first match is returned as a HiddenFinding.  Each regex
+ * test is wrapped in a try/catch so a pattern failure degrades gracefully.
+ * Returns null when no critical pattern is found.
+ *
+ * @param {string} logText
+ * @returns {{ type: string, matchedText: string, severity: 'CRITICAL', remediation: string } | null}
+ */
+function analyzeHidden(logText) {
+  const checks = [
+    {
+      pattern: /[A-Za-z0-9_]{20,}.*[Kk]ey|[Tt]oken|[Ss]ecret/,
+      type: 'ExposedCredential',
+      remediation: 'Rotate this credential immediately and move it to environment variables.',
+    },
+    {
+      pattern: /password\s*=/i,
+      type: 'HardcodedPassword',
+      remediation: 'Use a secrets manager instead of hardcoding passwords.',
+    },
+    {
+      pattern: /eval\s*\(/,
+      type: 'UnsafeEval',
+      remediation: 'Replace eval() with a safe alternative such as JSON.parse or a sandboxed evaluator.',
+    },
+    {
+      pattern: /DROP\s+TABLE/i,
+      type: 'SQLInjection',
+      remediation: 'Parameterize all database queries to prevent SQL injection.',
+    },
+    {
+      pattern: /CRITICAL|FATAL/i,
+      type: 'CriticalFrame',
+      remediation: 'Investigate this stack frame immediately — a fatal condition was detected.',
+    },
+  ];
+
+  for (const { pattern, type, remediation } of checks) {
+    try {
+      const match = pattern.exec(logText);
+      if (match) {
+        return {
+          type,
+          matchedText: match[0].slice(0, 80),
+          severity: 'CRITICAL',
+          remediation,
+        };
+      }
+    } catch (_err) {
+      // Pattern failed — skip and try the next one.
+    }
+  }
+
+  return null;
+}
+
+
+/**
+ * buildSuggestedFix(finding)
+ * Returns a human-readable, one-sentence fix string for the given SurfaceFinding.
+ *
+ * @param {{ type: string, label: string, matchedText: string }} finding
+ * @returns {string}
+ */
+function buildSuggestedFix(finding) {
+  const fixes = {
+    ReferenceError:    'Declare the variable before use, or check for a missing import.',
+    NullDereference:   'Add a null check or optional chaining (?.) before accessing the property.',
+    UncaughtException: 'Wrap the throwing code in a try/catch block and handle the error.',
+    StackOverflow:     'Check for unintended recursion and add a base case or depth limit.',
+    NetworkTimeout:    'Increase the request timeout or add retry logic with exponential back-off.',
+    Generic:           'Review the stack trace above and add targeted error handling.',
+  };
+
+  return fixes[finding.type] ?? 'Review the error and add appropriate error handling.';
+}
+
+
+/**
+ * analyzeLog(logText)
+ * Public entry point for the analyzer.  Trims the input, rejects whitespace-only
+ * strings with null, then delegates to analyzeSurface and analyzeHidden.
+ *
+ * @param {string} logText
+ * @returns {{ surface: SurfaceFinding, hidden: HiddenFinding | null } | null}
+ *   Returns null when the trimmed input is empty; the caller is responsible for
+ *   showing an appropriate error message in that case.
+ */
+function analyzeLog(logText) {
+  const trimmed = logText.trim();
+  if (trimmed === '') {
+    return null;
+  }
+
+  const surface = analyzeSurface(trimmed);
+  const hidden  = analyzeHidden(trimmed);
+
+  return { surface, hidden };
+}
 
 
 // --- AUDIO ---

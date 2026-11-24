@@ -34,8 +34,8 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
     - _Design: UI Layer §4, `fillTextarea`_
 
-- [ ] 2. Implement the log analyzer (pure functions)
-  - [~] 2.1 Implement `analyzeSurface(logText)` under `// --- ANALYZER ---`
+- [x] 2. Implement the log analyzer (pure functions)
+  - [x] 2.1 Implement `analyzeSurface(logText)` under `// --- ANALYZER ---`
     - Check patterns in priority order: `ReferenceError`, `Cannot read propert`, `Uncaught`, `Maximum call stack`, `timeout|ETIMEDOUT`, then generic fallback
     - Return a `SurfaceFinding` object `{ type, label, matchedText }`
     - _Requirements: 3.1, 3.4, 3.5_
@@ -46,7 +46,7 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
     - **Validates: Requirements 3.1, 3.4**
     - Use fast-check; generate arbitrary non-empty strings; assert `label` and `type` are non-empty strings
 
-  - [~] 2.3 Implement `analyzeHidden(logText)` under `// --- ANALYZER ---`
+  - [x] 2.3 Implement `analyzeHidden(logText)` under `// --- ANALYZER ---`
     - Test patterns in priority order: exposed credential token, `password=`, `eval(`, `DROP TABLE`, `CRITICAL|FATAL`
     - Return `HiddenFinding { type, matchedText, severity, remediation }` or `null`
     - Wrap each regex in try/catch; degrade gracefully to `null` on exception
@@ -60,12 +60,12 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
     - **Validates: Requirements 3.2, 3.3**
     - Use fast-check; generate safe strings (no critical substrings) and assert `null`; inject each critical pattern substring and assert non-null with correct `type`
 
-  - [~] 2.5 Implement `buildSuggestedFix(finding)` under `// --- ANALYZER ---`
+  - [x] 2.5 Implement `buildSuggestedFix(finding)` under `// --- ANALYZER ---`
     - Return a human-readable one-sentence fix string for each `SurfaceFinding.type`
     - _Requirements: 3.1, 6.1_
     - _Design: Analyzer §1, `buildSuggestedFix`_
 
-  - [~] 2.6 Implement `analyzeLog(logText)` as the public entry point
+  - [x] 2.6 Implement `analyzeLog(logText)` as the public entry point
     - Trims input; returns `null` if whitespace-only (caller handles the error message)
     - Calls `analyzeSurface` and `analyzeHidden`; returns `AnalysisResult { surface, hidden }`
     - _Requirements: 1.3, 3.1, 3.2_
