@@ -103,7 +103,7 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
     - _Requirements: 4.2, 4.3_
     - _Design: UI Layer §4_
 
-- [ ] 4. Implement the state machine
+- [x] 4. Implement the state machine
   - [~] 4.1 Define state object and `setPhase` UI helper under `// --- STATE MACHINE ---`
     - Declare `let state = { phase, result, droneHandle, strikeArmed, strikeTimer, strikeFired }`
     - Implement `setPhase(phase)` that sets `data-phase` attribute on `<body>`

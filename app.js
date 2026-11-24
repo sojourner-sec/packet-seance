@@ -200,12 +200,282 @@ function analyzeLog(logText) {
 
 // --- AUDIO ---
 
-// (Implemented in task 5.x)
+// Stubs — full implementation in task 5.x
+
+/** @type {AudioContext|null} */
+let _audioContext = null;
+/** @type {GainNode|null} */
+let _masterGain = null;
+let audioDisabled = false;
+
+function initAudio() {
+  if (_audioContext || audioDisabled) return;
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) { audioDisabled = true; return; }
+    _audioContext = new Ctx();
+    _masterGain = _audioContext.createGain();
+    _masterGain.gain.value = 1;
+    _masterGain.connect(_audioContext.destination);
+  } catch (_) {
+    audioDisabled = true;
+  }
+}
+
+/**
+ * @param {number} _durationSeconds
+ * @returns {{ stop: () => void }}
+ */
+function playDrone(_durationSeconds) {
+  // Full implementation in task 5.2
+  return { stop() {} };
+}
+
+function playSting() {
+  // Full implementation in task 5.3
+}
+
+function stopAll() {
+  // Full implementation in task 5.4
+}
 
 
 // --- STATE MACHINE ---
 
-// (Implemented in task 4.x)
+/**
+ * Application state.  All mutable runtime data lives here so every transition
+ * function reads and writes the same object.
+ *
+ * @type {{
+ *   phase: 'idle'|'summoning'|'calm'|'strike',
+ *   result: {surface: object, hidden: object|null}|null,
+ *   droneHandle: {stop: () => void}|null,
+ *   strikeArmed: boolean,
+ *   strikeTimer: ReturnType<typeof setTimeout>|null,
+ *   strikeFired: boolean,
+ * }}
+ */
+let state = {
+  phase: 'idle',
+  result: null,
+  droneHandle: null,
+  strikeArmed: false,
+  strikeTimer: null,
+  strikeFired: false,
+};
+
+// --- 4.1 ─────────────────────────────────────────────────────────────────────
+
+/**
+ * setPhase(phase)
+ * Reflects the current app phase as a `data-phase` attribute on <body> so CSS
+ * selectors like `body[data-phase="summoning"]` can respond automatically.
+ *
+ * @param {'idle'|'summoning'|'calm'|'strike'} phase
+ */
+function setPhase(phase) {
+  document.body.dataset.phase = phase;
+  state.phase = phase;
+}
+
+// --- 4.2 ─────────────────────────────────────────────────────────────────────
+
+/**
+ * summon(logText)
+ * Entry-point transition: idle → summoning.
+ * Validates input, runs the analyzer, starts the drone and planchette walk,
+ * then schedules _tensionComplete after ~3 s.
+ *
+ * @param {string} logText
+ */
+function summon(logText) {
+  if (state.phase !== 'idle') return;
+
+  const result = analyzeLog(logText);
+  if (result === null) {
+    showEmptyInputMessage();
+    return;
+  }
+
+  state.result     = result;
+  state.strikeArmed  = result.hidden !== null;
+  state.strikeFired  = false;
+  state.strikeTimer  = null;
+
+  setPhase('summoning');
+
+  // Walk the planchette through every zone in sequence, spaced evenly over 2.4 s,
+  // so it appears to scan the board before settling.
+  const walkZones = ['syntax', 'network', 'auth', 'memory'];
+  const stepMs    = 600;
+  walkZones.forEach(function (zone, i) {
+    setTimeout(function () { setPlanchetteZone(zone); }, i * stepMs);
+  });
+
+  // Start the rising drone.
+  state.droneHandle = playDrone(3);
+
+  // Schedule the tension-peak transition (~3 s).
+  setTimeout(_tensionComplete, 3000);
+}
+
+// --- 4.3 ─────────────────────────────────────────────────────────────────────
+
+/**
+ * _tensionComplete()
+ * Internal transition: summoning → calm.
+ * Called automatically ~3 s after summon().
+ */
+function _tensionComplete() {
+  if (state.phase !== 'summoning') return;
+
+  // Stop the drone gracefully.
+  if (state.droneHandle) {
+    state.droneHandle.stop();
+    state.droneHandle = null;
+  }
+
+  setPhase('calm');
+  document.body.classList.add('parchment-mode');
+
+  const fix = buildSuggestedFix(state.result.surface);
+  showSurfaceFinding(state.result.surface, fix);
+}
+
+// --- 4.4 ─────────────────────────────────────────────────────────────────────
+
+/**
+ * copyFix()
+ * Copies the surface fix text to the clipboard (with two fallback strategies),
+ * shows a brief confirmation, then arms a 4 s timer to trigger the strike if a
+ * hidden finding was detected.
+ */
+function copyFix() {
+  if (state.phase !== 'calm') return;
+
+  const fixEl = document.getElementById('surface-fix');
+  const fixText = fixEl ? fixEl.textContent : '';
+
+  // Primary: async Clipboard API.
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(fixText).then(function () {
+      showCopyConfirmation();
+    }).catch(function () {
+      _fallbackCopy(fixText);
+    });
+  } else {
+    _fallbackCopy(fixText);
+  }
+
+  // Arm the delayed strike, but only once per run.
+  if (state.strikeArmed && !state.strikeFired && state.strikeTimer === null) {
+    state.strikeTimer = setTimeout(_triggerStrike, 4000);
+  }
+}
+
+/**
+ * _fallbackCopy(text)
+ * Falls back to execCommand('copy') after creating a transient textarea,
+ * then falls back to visually selecting the fix text so the user can Ctrl+C.
+ *
+ * @param {string} text
+ */
+function _fallbackCopy(text) {
+  try {
+    const temp = document.createElement('textarea');
+    temp.value = text;
+    temp.style.position = 'fixed';
+    temp.style.opacity  = '0';
+    document.body.appendChild(temp);
+    temp.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(temp);
+    if (ok) { showCopyConfirmation(); return; }
+  } catch (_) {}
+
+  // Last resort: visually select the fix element text.
+  const fixEl = document.getElementById('surface-fix');
+  if (fixEl) {
+    const range = document.createRange();
+    range.selectNodeContents(fixEl);
+    const sel = window.getSelection();
+    if (sel) { sel.removeAllRanges(); sel.addRange(range); }
+  }
+}
+
+// --- 4.5 ─────────────────────────────────────────────────────────────────────
+
+/**
+ * pointerNearInput()
+ * Triggers an immediate strike when the user moves the pointer back toward the
+ * textarea while in calm mode and a hidden finding is armed.
+ * Registered as a pointermove listener on the textarea in the UI section.
+ */
+function pointerNearInput() {
+  if (state.strikeArmed && !state.strikeFired && state.phase === 'calm') {
+    _triggerStrike();
+  }
+}
+
+// --- Stubs for tasks 6.x and 7.x ─────────────────────────────────────────────
+
+/**
+ * _triggerStrike()
+ * Stub — full implementation in task 6.1.
+ * Guards via strikeFired so it fires at most once per run.
+ */
+function _triggerStrike() {
+  if (state.strikeFired) return;
+  state.strikeFired = true;
+
+  if (state.strikeTimer !== null) {
+    clearTimeout(state.strikeTimer);
+    state.strikeTimer = null;
+  }
+
+  setPhase('strike');
+  triggerFlash();
+  playSting();
+  setPlanchetteZone('critical');
+
+  // Reveal the hidden finding after the flash resolves.
+  setTimeout(function () {
+    if (state.result && state.result.hidden) {
+      showHiddenFinding(state.result.hidden);
+    }
+  }, 300);
+}
+
+/**
+ * reset()
+ * Stub — full implementation in task 7.1.
+ * Resets state and returns body to dark séance theme.
+ */
+function reset() {
+  if (state.strikeTimer !== null) {
+    clearTimeout(state.strikeTimer);
+  }
+  stopAll();
+
+  state.phase       = 'idle';
+  state.result      = null;
+  state.droneHandle = null;
+  state.strikeArmed  = false;
+  state.strikeTimer  = null;
+  state.strikeFired  = false;
+
+  document.body.dataset.phase = 'idle';
+  document.body.classList.remove('parchment-mode');
+
+  const panel = document.getElementById('result-panel');
+  if (panel) panel.hidden = true;
+
+  const surfaceDiv = document.getElementById('surface-finding');
+  if (surfaceDiv) surfaceDiv.hidden = true;
+
+  const hiddenDiv = document.getElementById('hidden-finding');
+  if (hiddenDiv) hiddenDiv.hidden = true;
+}
 
 
 // --- UI ---
@@ -257,6 +527,100 @@ function fillTextarea(sampleText) {
   textarea.focus();
 }
 
+// ─── UI helper stubs (full implementations in tasks 6.4–6.6) ─────────────────
+
+/**
+ * showEmptyInputMessage()
+ * Reveals the in-theme empty-input notice without changing state.phase.
+ * Requirements: 1.3
+ */
+function showEmptyInputMessage() {
+  const msg = document.getElementById('empty-input-msg');
+  if (msg) {
+    msg.hidden = false;
+    // Auto-hide after 3 s.
+    setTimeout(function () { msg.hidden = true; }, 3000);
+  }
+}
+
+/**
+ * showSurfaceFinding(finding, fix)
+ * Populates the result panel with the surface label, matched text, and fix string.
+ * Requirements: 5.3
+ *
+ * @param {{ type: string, label: string, matchedText: string }} finding
+ * @param {string} fix
+ */
+function showSurfaceFinding(finding, fix) {
+  const panel = document.getElementById('result-panel');
+  if (panel) panel.hidden = false;
+
+  const surfaceDiv = document.getElementById('surface-finding');
+  if (surfaceDiv) surfaceDiv.hidden = false;
+
+  const labelEl = document.getElementById('surface-label');
+  if (labelEl) labelEl.textContent = finding.label;
+
+  const matchEl = document.getElementById('surface-match');
+  if (matchEl) matchEl.textContent = finding.matchedText || '(no specific line matched)';
+
+  const fixEl = document.getElementById('surface-fix');
+  if (fixEl) fixEl.textContent = fix;
+}
+
+/**
+ * showHiddenFinding(finding)
+ * Populates the result panel with the hidden finding, severity badge, and remediation.
+ * Requirements: 7.4
+ *
+ * @param {{ type: string, matchedText: string, severity: string, remediation: string }} finding
+ */
+function showHiddenFinding(finding) {
+  const panel = document.getElementById('result-panel');
+  if (panel) panel.hidden = false;
+
+  const hiddenDiv = document.getElementById('hidden-finding');
+  if (hiddenDiv) hiddenDiv.hidden = false;
+
+  const severityEl = document.getElementById('hidden-severity');
+  if (severityEl) severityEl.textContent = finding.severity;
+
+  const typeEl = document.getElementById('hidden-type');
+  if (typeEl) typeEl.textContent = finding.type.replace(/([A-Z])/g, ' $1').trim();
+
+  const matchEl = document.getElementById('hidden-match');
+  if (matchEl) matchEl.textContent = finding.matchedText;
+
+  const remEl = document.getElementById('hidden-remediation');
+  if (remEl) remEl.textContent = finding.remediation;
+}
+
+/**
+ * showCopyConfirmation()
+ * Briefly shows "Copied!" feedback near the Copy Fix button; auto-hides after 1.5 s.
+ * Requirements: 6.2
+ */
+function showCopyConfirmation() {
+  const confirm = document.getElementById('copy-confirm');
+  if (!confirm) return;
+  confirm.hidden = false;
+  setTimeout(function () { confirm.hidden = true; }, 1500);
+}
+
+/**
+ * triggerFlash()
+ * Adds .invert-flash to <body> for 250 ms to produce a sharp visual shock.
+ * Requirements: 7.3
+ */
+function triggerFlash() {
+  document.body.classList.add('invert-flash');
+  setTimeout(function () {
+    document.body.classList.remove('invert-flash');
+  }, 250);
+}
+
+// ─── Wire all event handlers ──────────────────────────────────────────────────
+
 // Wire sample buttons once the DOM is ready.
 document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('sample-a').addEventListener('click', function () {
@@ -270,4 +634,37 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('sample-c').addEventListener('click', function () {
     fillTextarea(SAMPLE_C);
   });
+
+  // Summon Diagnosis button (task 4.2 / 7.2)
+  document.getElementById('summon-btn').addEventListener('click', function () {
+    const textarea = document.getElementById('log-input');
+    initAudio();
+    summon(textarea ? textarea.value : '');
+  });
+
+  // Copy Fix button (task 4.4 / 7.2)
+  document.getElementById('copy-fix-btn').addEventListener('click', function () {
+    copyFix();
+  });
+
+  // Reset button (task 7.2)
+  document.getElementById('reset-btn').addEventListener('click', function () {
+    reset();
+  });
+
+  // Mute / Unmute toggle (task 5.4 / 7.2)
+  document.getElementById('mute-btn').addEventListener('click', function () {
+    if (!_masterGain) return;
+    const isMuted = _masterGain.gain.value === 0;
+    _masterGain.gain.value = isMuted ? 1 : 0;
+    this.textContent = isMuted ? '🔊 Mute' : '🔇 Unmute';
+    this.setAttribute('aria-pressed', String(!isMuted));
+    this.setAttribute('aria-label', isMuted ? 'Mute audio' : 'Unmute audio');
+  });
+
+  // Pointermove on textarea — pointerNearInput bridge (task 4.5 / 7.2)
+  const textarea = document.getElementById('log-input');
+  if (textarea) {
+    textarea.addEventListener('pointermove', pointerNearInput);
+  }
 });
