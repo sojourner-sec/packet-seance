@@ -183,7 +183,8 @@ body.parchment-mode {
   --bg-input:         #f0e5c8;
   --bg-board:         #e8d8b0;
   --text-secondary:   #7a4e18;
-  --text-muted:       #9a7a4a;
+  --text-primary:   #3b2a14;
+  --text-muted:       #6b4e28;
   --border-primary:   #c0944a;
   --border-subtle:    #d8c08a;
   --zone-label:       #7a4e18;
@@ -467,6 +468,13 @@ body.parchment-mode .btn--utility:hover {
   background: rgba(237, 224, 188, 0.95);
 }
 
+/* Parchment: sample button hover should use dark text, not pale gold */
+body.parchment-mode .btn--sample:hover {
+  background: rgba(120, 70, 20, 0.12);
+  border-color: var(--brass-mid);
+  color: #3b2a14;
+}
+
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SAMPLE BUTTONS ROW
@@ -687,6 +695,11 @@ body[data-phase="strike"] #planchette {
   color: #e09070;
 }
 
+/* Parchment: light salmon danger text becomes dark red-brown */
+body.parchment-mode .finding-match--danger {
+  color: #7a1a0a;
+}
+
 .finding-fix,
 .finding-remediation {
   font-style: italic;
@@ -700,6 +713,11 @@ body[data-phase="strike"] #planchette {
   border-top: 1px solid var(--border-subtle);
   padding-top: var(--space-sm);
   margin-top: var(--space-sm);
+}
+
+/* Parchment: light orange remedy text becomes dark brown */
+body.parchment-mode .finding-remediation {
+  color: #5a2e0a;
 }
 
 /* Severity badge */
@@ -736,6 +754,11 @@ body[data-phase="strike"] #planchette {
 
 .copy-confirm:not([hidden]) {
   opacity: 1;
+}
+
+/* Parchment: green confirmation is invisible on light background */
+body.parchment-mode .copy-confirm {
+  color: #2a6e1a;
 }
 
 /* Hidden finding card — dramatic dark */
