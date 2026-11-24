@@ -2,125 +2,294 @@
 
 ## Overview
 
-Séance is a single-page, static web app that transforms developer error-log triage into a Victorian spirit-board horror experience. The core interaction is a 3-beat false-suspense loop: a tense animated analysis, a calm and seemingly harmless surface finding, then a delayed shock that surfaces a genuinely dangerous hidden issue. All logic runs client-side in vanilla HTML/CSS/JS; no build step, no dependencies, no server.
+Packet Séance is a single-page, static web app that transforms a `.pcap` network capture into a Victorian ghost-story experience. The core interaction is a 3-beat false-suspense loop: a tense animated analysis where the planchette stalks across a spirit board, a calm and apparently harmless traffic summary, then a delayed shock that reveals hidden suspicious activity. All logic runs client-side in vanilla HTML/CSS/JS; no build step, no dependencies, no server.
 
-The design is organized around four concerns that must stay cleanly separated:
+The design is organized around four concerns that stay cleanly separated:
 
-1. **Analysis** — pure functions that classify a log and extract findings.
-2. **Audio** — a synthesizer that generates a rising drone and a sharp sting via the Web Audio API.
-3. **State machine** — drives the app through its four phases: `idle → summoning → calm → strike` (or `calm → reset` when no critical pattern exists).
-4. **UI** — the DOM, animations, and event handlers that the state machine controls.
+1. **Parsing** — pure functions that read pcap bytes and decode packet fields.
+2. **Detection** — pure functions that classify decoded packets and return structured findings.
+3. **Narration** — pure template functions that turn findings into ghost-story text.
+4. **Orchestration** — the state machine, audio synthesizer, and UI wiring in `app.js`.
+
+Each concern lives in its own file. Files expose plain global functions only; there are no ES module imports so the app works when opened directly from a file system.
 
 ---
 
 ## Architecture
 
-The app is a flat, three-file static site. All code lives in `app.js`, divided into five clearly commented sections that mirror the structure described in the steering document.
+Eight files are loaded in order via plain `<script>` tags. No bundler, no npm.
 
 ```mermaid
 flowchart TD
     User["User (browser)"]
-    Input["Log input / sample buttons"]
-    Analyzer["Log Analyzer\n(pure functions)"]
-    StateMachine["3-beat State Machine"]
-    AudioSynth["Audio Synthesizer\n(Web Audio API)"]
-    UI["UI Layer\n(DOM, CSS classes, animations)"]
+    FileInput["File input / drag-drop / sample buttons"]
+    Pcap["pcap.js\n(parsePcap, decodePacket, buildSummary)"]
+    Detectors["detectors.js\n(runDetectors, 5 pure detector functions)"]
+    Story["story.js\n(generateSummaryStory, generateFindingStory,\ngeneratePeacefulStory)"]
+    StateMachine["app.js — State Machine\nidle → summoning → calm → strike"]
+    Audio["audio.js\n(playDrone, playSting, stopAll)"]
+    UI["app.js — UI Layer\n(DOM, CSS classes, animations)"]
 
-    User -->|paste / sample click| Input
-    Input -->|raw log text| Analyzer
-    Analyzer -->|AnalysisResult| StateMachine
-    StateMachine -->|playDrone / playSting / mute| AudioSynth
-    StateMachine -->|addCSSClass / setContent / startTimer| UI
-    UI -->|events: copyFix, pointerEnter, reset| StateMachine
+    User -->|upload .pcap / sample click| FileInput
+    FileInput -->|ArrayBuffer| Pcap
+    Pcap -->|packets[]| Detectors
+    Pcap -->|packets[]| Story
+    Detectors -->|findings[]| Story
+    Story -->|strings| UI
+    Pcap -->|summary| StateMachine
+    Detectors -->|findings| StateMachine
+    StateMachine -->|playDrone / playSting / stopAll| Audio
+    StateMachine -->|setPhase / setPlanchetteZone / showFindings| UI
+    UI -->|copySummary / pointerNearInput / reset| StateMachine
 ```
 
-The `Analyzer` never touches the DOM. The `AudioSynth` never reads the DOM. The `StateMachine` is the only module that coordinates all three. Event handlers in the UI layer call state machine transition functions and do nothing else.
+`pcap.js`, `detectors.js`, and `story.js` are pure-function modules: they take data in and return data out with no DOM or audio side effects. `audio.js` manages audio nodes only. `app.js` is the only module that coordinates all concerns and touches the DOM.
 
 ---
 
 ## Components and Interfaces
 
-### 1 — Log Analyzer
+### 1 — `pcap.js` — Packet Parser
 
-Located in `app.js` under `// --- ANALYZER ---`.
+All functions are pure and have no DOM access.
 
-#### `analyzeSurface(logText: string): SurfaceFinding`
+#### `parsePcap(arrayBuffer)`
 
-Scans the log for a minor, harmless issue to present as the initial result. Priority order:
+Reads the global pcap file header to detect byte order and timestamp resolution, then iterates packet records.
 
-| Check | Pattern | Label |
+| Magic number | Byte order | Timestamps |
 |---|---|---|
-| Undefined variable | `/ReferenceError/i` | Undefined variable reference |
-| Null dereference | `/Cannot read propert/i` | Null dereference |
-| Uncaught exception | `/Uncaught/i` | Uncaught exception |
-| Stack overflow | `/Maximum call stack/i` | Stack overflow |
-| Network timeout | `/timeout|ETIMEDOUT/i` | Network timeout |
-| Generic fallback | (always) | Unexpected runtime error |
+| `0xa1b2c3d4` | little-endian | microseconds |
+| `0xd4c3b2a1` | big-endian | microseconds |
+| `0xa1b23c4d` | little-endian | nanoseconds |
+| `0x4d3cb2a1` | big-endian | nanoseconds |
 
-Returns the first match, or the fallback if none match.
+- If the first four bytes are `0x0a 0x0d 0x0d 0x0a` (pcapng), throws `{ type: 'PCAPNG' }`.
+- If the magic is unrecognised, throws `{ type: 'INVALID' }`.
+- Stops reading after 50,000 packets; sets `truncated: true`.
+- Skips any packet whose stated `inclLen` would read past the buffer end, incrementing `skipped`; never throws on bad data.
 
-#### `analyzeHidden(logText: string): HiddenFinding | null`
+Returns:
+```js
+{
+  packets: DecodedPacket[],
+  skipped: number,
+  truncated: boolean,
+  linkType: number
+}
+```
 
-Scans for critical patterns. Returns the first match found, or `null`.
+#### `decodePacket(rawBytes, linkType, tsSeconds, tsNanoseconds)`
 
-| Pattern | Type | Remediation summary |
-|---|---|---|
-| `/[A-Za-z0-9_]{20,}.*[Kk]ey\|[Tt]oken\|[Ss]ecret/` | Exposed credential | Rotate immediately, move to env vars |
-| `/password\s*=/i` | Hardcoded password | Use secrets manager |
-| `/eval\s*\(/` | Unsafe eval | Replace with safe alternative |
-| `/DROP\s+TABLE/i` | SQL injection vector | Parameterize queries |
-| `/CRITICAL\|FATAL/i` | Critical/fatal frame | Investigate stack frame immediately |
+Decodes one raw packet buffer. Only link type 1 (Ethernet) is analyzed; other link types increment an internal counter but return a minimal object with `protocol: 'unknown'`.
 
-The patterns are tested in this priority order; the first match wins.
+Decode chain:
+- **Ethernet** (14 bytes): src/dst MAC, EtherType
+  - EtherType `0x0806` → ARP
+  - EtherType `0x0800` → IPv4
+  - Other EtherTypes → counted, not analyzed
+- **ARP**: op code, sender/target IP and MAC
+- **IPv4** (minimum 20 bytes): src/dst IP, protocol, TTL, total length; options skipped
+  - Protocol `1` → ICMP
+  - Protocol `6` → TCP
+  - Protocol `17` → UDP
+- **TCP**: src/dst port, flags (SYN, ACK, RST, FIN), payload bytes
+- **UDP**: src/dst port, payload bytes; if dst or src port is 53 → DNS
+- **ICMP**: type and code (type 8 = echo request, type 0 = echo reply)
+- **DNS** (UDP port 53): question section (name, qtype, qclass), answer RCODE
 
-#### `buildSuggestedFix(finding: SurfaceFinding): string`
+Returns:
+```js
+{
+  ts: number,         // Unix timestamp in seconds (float)
+  eth: { src, dst, etherType } | null,
+  arp: { op, senderIp, senderMac, targetIp, targetMac } | null,
+  ip:  { src, dst, protocol, ttl } | null,
+  tcp: { srcPort, dstPort, flags, payload: Uint8Array } | null,
+  udp: { srcPort, dstPort, payload: Uint8Array } | null,
+  icmp:{ type, code } | null,
+  dns: { name, qtype, rcode } | null,
+  raw: Uint8Array,
+  protocol: string    // 'arp'|'ipv4'|'tcp'|'udp'|'icmp'|'dns'|'unknown'
+}
+```
 
-Returns a human-readable, one-sentence fix string for the surface finding. Pure function.
+Fields are `null` when not present in the packet.
+
+#### `buildSummary(packets)`
+
+Aggregates decoded packets into a surface summary.
+
+Returns:
+```js
+{
+  totalPackets: number,
+  skipped: number,
+  truncated: boolean,
+  durationSeconds: number,       // ts of last packet minus ts of first
+  protocolCounts: {              // keyed by protocol string
+    arp: number, ipv4: number, tcp: number,
+    udp: number, icmp: number, dns: number, unknown: number
+  },
+  topTalkers: [{ ip: string, count: number }]  // top 5 by packet count
+}
+```
 
 ---
 
-### 2 — Audio Synthesizer
+### 2 — `detectors.js` — Detection Rules
 
-Located in `app.js` under `// --- AUDIO ---`.
+All functions are pure and have no DOM access.
 
-The `AudioContext` is created lazily on the first user click and stored in a module-level variable. All subsequent calls reuse it. A single master `GainNode` sits at the end of every audio graph; the mute toggle sets `masterGain.gain.value` to `0` or `1`.
+#### Config object
 
-#### `initAudio(): void`
+```js
+const THRESHOLDS = {
+  portScanMinPorts: 15,
+  portScanMaxHandshakeRatio: 0.1,
+  pingSweepMinHosts: 10,
+  dnsNxdomainBurst: 10,
+  dnsLongNameLength: 40,
+  dnsHighEntropy: 3.5,      // bits per character Shannon entropy
+  arpSpoofMinMacs: 2,
+};
+```
 
-Creates `AudioContext` and `masterGain` if not already created. Connects `masterGain` to `context.destination`. Safe to call multiple times.
+All five detectors read only from `THRESHOLDS`, never from magic numbers scattered through code.
 
-#### `playDrone(durationSeconds: number): DroneHandle`
+#### `detectPortScan(packets)` → `Finding | null`
 
-Builds a rising sub-bass tension drone:
+Groups TCP SYN packets (`flags.SYN && !flags.ACK`) by `src → dst` pair. For each pair, counts distinct destination ports and total completed handshakes (SYN+ACK seen). Returns a finding if any pair has distinct ports ≥ `portScanMinPorts` and handshake ratio ≤ `portScanMaxHandshakeRatio`. Severity: **high**.
 
-- Two `OscillatorNode`s: one `sine` at ~40 Hz, one `sawtooth` at ~60 Hz.
+#### `detectPingSweep(packets)` → `Finding | null`
+
+Groups ICMP echo request packets (type 8) by source IP. Returns a finding if any source has sent echo requests to ≥ `pingSweepMinHosts` distinct destination IPs. Severity: **medium**.
+
+#### `detectSuspiciousDns(packets)` → `Finding | null`
+
+Inspects DNS query names. Returns a finding if any name is longer than `dnsLongNameLength` characters, has Shannon entropy above `dnsHighEntropy` bits per character, or if any single client IP receives ≥ `dnsNxdomainBurst` NXDOMAIN replies (rcode 3) across the session. Severity: **high**.
+
+Shannon entropy formula: H = −Σ(pᵢ · log₂ pᵢ) where pᵢ is the frequency of character i in the domain name.
+
+#### `detectCleartextCredentials(packets)` → `Finding | null`
+
+Scans TCP payload bytes (decoded as UTF-8 where safe) for:
+- HTTP `Authorization: Basic ` header (Base64 credential)
+- HTTP form body containing `password=` (case-insensitive)
+- FTP `USER ` or `PASS ` commands
+
+Credentials are always masked: the first four characters are shown followed by `****`. The raw credential is never stored or returned. Severity: **high**.
+
+#### `detectArpSpoofing(packets)` → `Finding | null`
+
+Builds a map of `ip → Set<mac>` from ARP reply packets. Returns a finding if any IP appears with ≥ `arpSpoofMinMacs` distinct MACs. Severity: **high**.
+
+#### `runDetectors(packets)` → `Finding[]`
+
+Calls all five detectors and returns the array of non-null results.
+
+#### Finding shape
+
+```js
+{
+  type: 'PortScan' | 'PingSweep' | 'SuspiciousDns' | 'CleartextCredentials' | 'ArpSpoofing',
+  severity: 'high' | 'medium',
+  hosts: string[],     // IPs or MACs involved
+  evidence: string,    // short plain-text summary; credentials masked
+  packetCount: number
+}
+```
+
+---
+
+### 3 — `story.js` — Narrative Templates
+
+All functions are pure; text is returned as strings and inserted into the DOM using `textContent`, never `innerHTML`.
+
+#### `generateSummaryStory(summary)` → `string`
+
+Returns a short, harmless ghost-story paragraph framing the traffic summary. References real protocol counts and packet totals from the `summary` object. Always returns a non-empty string.
+
+#### `generateFindingStory(finding)` → `{ story, explanation, tip }`
+
+Template-driven narration for each finding type. The `story` names real hosts and ports from `finding.hosts`. All three fields are always non-empty strings.
+
+| Finding type | Story theme | Tip focus |
+|---|---|---|
+| `PortScan` | Footsteps testing every door | Block unused ports, alert on SYN floods |
+| `PingSweep` | Lantern sweeping the grounds | Restrict ICMP, segment the network |
+| `SuspiciousDns` | Whispered names in an unknown tongue | Monitor DNS, block C2 candidates |
+| `CleartextCredentials` | A letter opened in plain sight | Use TLS, replace HTTP Basic auth |
+| `ArpSpoofing` | An impostor wearing another's face | Enable dynamic ARP inspection |
+
+#### `generatePeacefulStory(summary)` → `string`
+
+Returns a short, peaceful story for a clean capture with no findings. Always returns a non-empty string.
+
+---
+
+### 4 — `samples.js` — Synthetic Capture Generators
+
+Each function builds a minimal valid classic pcap as an `ArrayBuffer` using `DataView` with little-endian byte order and magic `0xa1b2c3d4`.
+
+The file header format: magic (4), version major (2), version minor (2), thiszone (4), sigfigs (4), snaplen (4), network/linkType (4). Per-packet header: ts_sec (4), ts_usec (4), incl_len (4), orig_len (4), then raw bytes.
+
+#### `generateQuietHouseCapture()` → `ArrayBuffer`
+
+Builds ARP + DNS + HTTP packets with no suspicious patterns. Used for the "no-strike" experience path.
+
+#### `generateKnockingVisitorCapture()` → `ArrayBuffer`
+
+Builds TCP SYN packets to 20 distinct destination ports (one source, one destination host) and ICMP echo requests to 12 distinct hosts. Triggers `PortScan` (high) and `PingSweep` (medium).
+
+#### `generateWhisperingWireCapture()` → `ArrayBuffer`
+
+Builds suspicious DNS queries (names > 40 chars with high entropy, 12 NXDOMAIN replies), an HTTP request with an `Authorization: Basic` header, and ARP replies claiming one IP from two different MACs. Triggers `SuspiciousDns` (high), `CleartextCredentials` (high), and `ArpSpoofing` (high).
+
+---
+
+### 5 — `audio.js` — Procedural Audio Synthesizer
+
+The `AudioContext` is created lazily on the first user click and reused thereafter. A single master `GainNode` sits at the end of every audio graph; the mute toggle sets `masterGain.gain.value` to `0` or `1` immediately.
+
+#### `initAudio()` → `void`
+
+Creates `AudioContext` (or `webkitAudioContext`) and `masterGain` if not already present; connects `masterGain` to `context.destination`. Safe to call multiple times.
+
+#### `playDrone(durationSeconds)` → `DroneHandle`
+
+Rising sub-bass tension drone:
+- Two `OscillatorNode`s: `sine` at ~40 Hz and `sawtooth` at ~60 Hz.
 - Both feed a `BiquadFilterNode` (lowpass, cutoff ~200 Hz, Q 5) for a muffled rumble.
-- A `GainNode` with a linear ramp from 0 → 0.6 over `durationSeconds`.
-- Returns a `DroneHandle` with a `stop()` method that ramps gain to 0.0001 over 0.3 s then disconnects.
+- A `GainNode` with a linear ramp from `0 → 0.6` over `durationSeconds`.
+- Returns `{ stop() }`: `stop()` ramps gain to 0.0001 over 0.3 s then disconnects nodes.
 
-#### `playSting(): void`
+#### `playSting()` → `void`
 
-Plays the sharp discordant sting:
-
+Sharp discordant sting:
 - Three `OscillatorNode`s at dissonant intervals: ~440 Hz (`sawtooth`), ~466 Hz (`sawtooth`), ~523 Hz (`square`).
 - Fed into a `WaveShaperNode` with a hard-clip distortion curve.
-- A `GainNode` with an attack of 5 ms and exponential decay to 0.0001 over 0.4 s.
+- A `GainNode` with 5 ms attack and exponential decay to 0.0001 over 0.4 s.
 - Oscillators auto-stop after 0.5 s.
 
-#### `stopAll(): void`
+#### `stopAll()` → `void`
 
-Calls `stop()` on any live `DroneHandle` and disconnects nodes. Used on reset.
+Calls `stop()` on any live `DroneHandle` and disconnects all nodes. Used on reset.
+
+#### `setMute(muted)` → `void`
+
+Sets `masterGain.gain.value` to `0` (muted) or `1` (unmuted). No-op if audio is disabled.
 
 ---
 
-### 3 — State Machine
+### 6 — `app.js` — State Machine and UI Wiring
 
-Located in `app.js` under `// --- STATE MACHINE ---`.
+#### State machine
 
 ```mermaid
 stateDiagram-v2
     [*] --> idle
-    idle --> summoning : summon(logText, result)
+    idle --> summoning : summon(arrayBuffer)
     summoning --> calm : _tensionComplete()
     calm --> strike : _triggerStrike()
     calm --> idle : reset()
@@ -128,15 +297,17 @@ stateDiagram-v2
     idle --> idle : reset()
 ```
 
-State is a plain object:
+State object:
 
 ```js
 let state = {
   phase: 'idle',          // 'idle' | 'summoning' | 'calm' | 'strike'
-  result: null,           // AnalysisResult | null
+  packets: null,          // DecodedPacket[] | null
+  summary: null,          // BuildSummary result | null
+  findings: [],           // Finding[]
   droneHandle: null,      // DroneHandle | null
-  strikeArmed: false,     // true when hidden finding exists and strike hasn't fired
-  strikeTimer: null,      // setTimeout handle
+  strikeArmed: false,     // true when ≥1 high-severity finding exists
+  strikeTimer: null,      // setTimeout handle | null
   strikeFired: false,     // guards the "fire at most once" rule
 };
 ```
@@ -145,83 +316,94 @@ let state = {
 
 | Function | From | To | Description |
 |---|---|---|---|
-| `summon(logText)` | `idle` | `summoning` | Runs analyzer, dims screen, starts drone, starts planchette walk, schedules `_tensionComplete` after ~3 s |
-| `_tensionComplete()` | `summoning` | `calm` | Stops drone ramp, switches to parchment mode, displays surface finding |
-| `copyFix()` | `calm` | `calm` | Copies fix text; if `strikeArmed`, starts 4 s timer calling `_triggerStrike` |
+| `summon(arrayBuffer)` | `idle` | `summoning` | Parses pcap, runs detectors, arms strike if any high-severity finding; dims screen, starts drone, starts planchette walk, schedules `_tensionComplete` after ~3 s |
+| `_tensionComplete()` | `summoning` | `calm` | Stops drone ramp, switches to parchment mode, displays traffic summary |
+| `copySummary()` | `calm` | `calm` | Copies summary text; if `strikeArmed`, starts 4 s timer calling `_triggerStrike` |
 | `pointerNearInput()` | `calm` | `calm` | If `strikeArmed && !strikeFired`, calls `_triggerStrike` immediately |
-| `_triggerStrike()` | `calm` | `strike` | Guards via `strikeFired`; fires flash, sting, planchette slam, reveals hidden finding |
-| `reset()` | any | `idle` | Clears all timers, stops all audio, restores dark theme |
+| `_triggerStrike()` | `calm` | `strike` | Guards via `strikeFired`; fires flash, sting, planchette slam, reveals all findings |
+| `reset()` | any | `idle` | Clears all timers, stops all audio, restores dark séance theme, clears results, resets `strikeFired` |
 
----
+Non-transition handlers (stay in `idle`):
+- `showEmptyInputMessage()` — no file loaded when "Summon Diagnosis" is clicked.
+- `showPcapngMessage()` — file is pcapng; shows how to save as classic pcap.
+- `showErrorMessage(msg)` — file too large (>5 MB), invalid magic, or other read error.
 
-### 4 — UI Layer
+#### UI functions
 
-Located in `app.js` under `// --- UI ---`.
-
-The UI layer is entirely reactive to state machine calls. It has no internal state. Each state machine transition calls a small set of UI functions:
-
-| UI function | What it does |
+| Function | Effect |
 |---|---|
-| `setPhase(phase)` | Adds/removes `data-phase` attribute on `<body>` for CSS targeting |
-| `setPlanchetteZone(zone)` | Updates planchette `transform: translate(x, y)` to the named zone |
-| `showSurfaceFinding(finding, fix)` | Populates result panel with surface text |
-| `showHiddenFinding(finding)` | Populates result panel with hidden issue and remediation |
+| `setPhase(phase)` | Sets `data-phase` attribute on `<body>` for CSS targeting |
+| `setPlanchetteZone(zone)` | Moves planchette `transform: translate(x,y)` to named zone |
+| `showSummary(summary, storyText)` | Populates summary panel using `textContent` |
+| `showFindings(findings)` | Renders each finding's story, explanation and tip using `textContent` |
 | `triggerFlash()` | Adds `.invert-flash` class, removes it after 250 ms |
 | `showCopyConfirmation()` | Briefly shows "Copied!" feedback |
-| `fillTextarea(sampleText)` | Loads a sample log into the textarea |
+| `loadSampleCapture(name, buffer)` | Loads a generated sample buffer and shows name + packet count |
 
-The spirit board itself is static HTML. The five zone positions are encoded as a constant map:
+#### Spirit board zones
 
 ```js
 const ZONE_POSITIONS = {
-  syntax:   { x: '15%', y: '30%' },
-  network:  { x: '35%', y: '55%' },
-  auth:     { x: '55%', y: '30%' },
-  memory:   { x: '75%', y: '55%' },
-  critical: { x: '45%', y: '75%' },
+  recon:     { x: '15%', y: '30%' },
+  dns:       { x: '35%', y: '55%' },
+  cleartext: { x: '55%', y: '30%' },
+  lateral:   { x: '75%', y: '55%' },
+  critical:  { x: '45%', y: '75%' },
 };
 ```
+
+The planchette walks across recon → dns → cleartext → lateral during the summoning phase, then slams to critical on strike.
 
 ---
 
 ## Data Models
 
-### `SurfaceFinding`
+### `DecodedPacket`
 
 ```js
 {
-  type: string,       // e.g. 'ReferenceError', 'NetworkTimeout', 'Generic'
-  label: string,      // human-readable label shown in the UI
-  matchedText: string // first matching line or '' for the fallback
+  ts: number,
+  eth:  { src: string, dst: string, etherType: number } | null,
+  arp:  { op: number, senderIp: string, senderMac: string, targetIp: string, targetMac: string } | null,
+  ip:   { src: string, dst: string, protocol: number, ttl: number } | null,
+  tcp:  { srcPort: number, dstPort: number, flags: { SYN, ACK, RST, FIN: boolean }, payload: Uint8Array } | null,
+  udp:  { srcPort: number, dstPort: number, payload: Uint8Array } | null,
+  icmp: { type: number, code: number } | null,
+  dns:  { name: string, qtype: number, rcode: number } | null,
+  raw:  Uint8Array,
+  protocol: string
 }
 ```
 
-### `HiddenFinding`
+### `Summary`
 
 ```js
 {
-  type: string,         // e.g. 'ExposedCredential', 'HardcodedPassword'
-  matchedText: string,  // the matched substring (truncated to 80 chars)
-  severity: 'CRITICAL', // always CRITICAL for now
-  remediation: string   // one-sentence remediation
+  totalPackets: number,
+  skipped: number,
+  truncated: boolean,
+  durationSeconds: number,
+  protocolCounts: { arp, ipv4, tcp, udp, icmp, dns, unknown: number },
+  topTalkers: [{ ip: string, count: number }]
 }
 ```
 
-### `AnalysisResult`
+### `Finding`
 
 ```js
 {
-  surface: SurfaceFinding,
-  hidden: HiddenFinding | null
+  type: 'PortScan' | 'PingSweep' | 'SuspiciousDns' | 'CleartextCredentials' | 'ArpSpoofing',
+  severity: 'high' | 'medium',
+  hosts: string[],
+  evidence: string,
+  packetCount: number
 }
 ```
 
 ### `DroneHandle`
 
 ```js
-{
-  stop: () => void   // ramps gain to near-zero then disconnects nodes
-}
+{ stop: () => void }
 ```
 
 ---
@@ -230,71 +412,109 @@ const ZONE_POSITIONS = {
 
 *A property is a characteristic or behavior that should hold true across all valid executions of a system — essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
 
-### Property 1: Surface finding is always present
+### Property 1: Parser handles all supported magic numbers
 
-*For any* non-empty log string, `analyzeSurface` SHALL return a `SurfaceFinding` with a non-empty `label` and a non-empty `type`.
+*For each* of the four supported magic numbers (`0xa1b2c3d4`, `0xd4c3b2a1`, `0xa1b23c4d`, `0x4d3cb2a1`), `parsePcap` SHALL return an object with a `packets` array and correct byte-order detection, without throwing.
 
-**Validates: Requirements 3.1, 3.4**
+**Validates: Requirements 3.1**
 
-### Property 2: Hidden scan returns null for safe logs
+### Property 2: Parser rejects pcapng
 
-*For any* string that contains none of the critical patterns (exposed credential token, `password=`, `eval(`, `DROP TABLE`, `CRITICAL`, `FATAL`), `analyzeHidden` SHALL return `null`.
+*For any* `ArrayBuffer` whose first four bytes are `0x0a 0x0d 0x0d 0x0a`, `parsePcap` SHALL throw `{ type: 'PCAPNG' }`.
 
-**Validates: Requirements 3.2, 7.6**
+**Validates: Requirements 1.4**
 
-### Property 3: Hidden scan detects all critical patterns
+### Property 3: Malformed packets are skipped safely
 
-*For any* log string that contains at least one critical pattern substring, `analyzeHidden` SHALL return a non-null `HiddenFinding` whose `type` identifies the matched category.
+*For any* pcap buffer containing one or more packet records whose stated `inclLen` would read past the end of the buffer, `parsePcap` SHALL return without throwing, and the returned `skipped` count SHALL be greater than zero.
 
-**Validates: Requirements 3.2, 3.3**
+**Validates: Requirements 3.3**
 
-### Property 4: Strike fires at most once per analysis run
+### Property 4: Parser truncates at 50,000 packets
 
-*For any* sequence of `copyFix()` calls and `pointerNearInput()` events after a single `summon()`, the strike transition SHALL execute at most once (i.e., `strikeFired` becomes `true` on first fire and gates all subsequent calls).
+*For any* pcap with more than 50,000 valid packet records, `parsePcap` SHALL return an array of exactly 50,000 packets and `truncated: true`.
 
-**Validates: Requirements 7.5**
+**Validates: Requirements 3.5**
 
-### Property 5: Strike never fires when no hidden pattern exists
+### Property 5: Port scan detector respects threshold
 
-*For any* log whose `analyzeHidden` result is `null`, no sequence of UI events SHALL cause the strike transition to execute.
+*For any* packet set where a single source has TCP SYN-only packets to exactly N distinct destination ports on one host: `detectPortScan` SHALL return non-null if and only if N ≥ `THRESHOLDS.portScanMinPorts`.
 
-**Validates: Requirements 7.6**
+**Validates: Requirements 4.1**
 
-### Property 6: Whitespace-only input is rejected
+### Property 6: ARP spoof detector respects threshold
 
-*For any* string composed entirely of whitespace characters (spaces, tabs, newlines), clicking "Summon Diagnosis" SHALL show an in-theme rejection message and SHALL NOT transition the state machine out of `idle`.
+*For any* packet set, `detectArpSpoofing` SHALL return non-null if and only if at least one IP address appears with ≥ `THRESHOLDS.arpSpoofMinMacs` distinct MAC addresses.
 
-**Validates: Requirements 1.3**
+**Validates: Requirements 4.5**
 
-### Property 7: Reset returns to idle from any phase
+### Property 7: Credentials are always masked
 
-*For any* state machine phase (`idle`, `summoning`, `calm`, `strike`), calling `reset()` SHALL transition to `idle`, clear `strikeFired`, clear `strikeTimer`, and stop all audio.
+*For any* packet payload that triggers `detectCleartextCredentials`, the `evidence` field in the returned finding SHALL NOT contain the full credential string — it SHALL be partially masked (first ≤ 4 characters visible, remainder replaced with `****`).
 
-**Validates: Requirements 9.1, 9.2**
+**Validates: Requirements 4.9**
+
+### Property 8: Finding shape is complete
+
+*For any* non-null finding returned by any detector, the object SHALL contain non-empty `type`, `severity`, `hosts`, `evidence`, and a numeric `packetCount`.
+
+**Validates: Requirements 4.6**
+
+### Property 9: Story functions always return non-empty strings
+
+*For any* `Summary` object, `generateSummaryStory` and `generatePeacefulStory` SHALL each return a non-empty string; *for any* `Finding` object with a known type, `generateFindingStory` SHALL return `{ story, explanation, tip }` with all three fields non-empty.
+
+**Validates: Requirements 5.2, 6.1, 6.5**
+
+### Property 10: Strike fires at most once per analysis run
+
+*For any* sequence of `copySummary()` calls and `pointerNearInput()` events after a single `summon()`, the strike transition SHALL execute at most once — `strikeFired` becomes `true` on the first fire and gates all subsequent calls.
+
+**Validates: Requirements 10.5**
+
+### Property 11: Strike never fires without a high-severity finding
+
+*For any* capture whose `runDetectors` result contains no high-severity finding, no sequence of UI events (`copySummary`, `pointerNearInput`) SHALL cause the phase to become `'strike'`.
+
+**Validates: Requirements 10.6**
+
+### Property 12: Reset returns to idle from any phase
+
+*For any* phase in `{ 'idle', 'summoning', 'calm', 'strike' }`, calling `reset()` SHALL result in `phase === 'idle'`, `strikeFired === false`, `strikeTimer === null`, and no active audio nodes.
+
+**Validates: Requirements 12.2**
 
 ---
 
 ## Error Handling
 
+### pcapng file
+
+`parsePcap` throws `{ type: 'PCAPNG' }` before any further processing. `summon()` catches this and calls `showPcapngMessage()`, which displays a friendly in-theme message explaining how to export as classic pcap from Wireshark. Phase stays `'idle'`.
+
+### Invalid magic or unreadable file
+
+`parsePcap` throws `{ type: 'INVALID', message }`. `summon()` catches this and calls `showErrorMessage(msg)`. Phase stays `'idle'`.
+
+### File too large
+
+`summon()` checks `arrayBuffer.byteLength` before calling `parsePcap`. If the buffer exceeds 5 MB (5 × 1024 × 1024 bytes), it calls `showErrorMessage` with an in-theme size warning. Phase stays `'idle'`.
+
+### Malformed packets
+
+Individual packets with `inclLen` past the buffer boundary are silently skipped (counter incremented). `parsePcap` never throws on bad packet data.
+
 ### Web Audio API unavailable
 
-If `window.AudioContext` and `window.webkitAudioContext` are both absent, `initAudio()` sets a module flag `audioDisabled = true`. All subsequent audio calls are no-ops. The visual experience continues unaffected.
+`initAudio()` checks for `window.AudioContext` and `window.webkitAudioContext`. If both are absent, it sets `audioDisabled = true`. All subsequent audio calls are no-ops. The visual experience continues unaffected.
 
 ### Clipboard API unavailable
 
-`copyFix()` calls `navigator.clipboard.writeText()` inside a try/catch. On failure it falls back to `document.execCommand('copy')` after selecting the fix text. If that also fails, the fix text is selected visually so the user can copy manually with Ctrl+C.
+`copySummary()` calls `navigator.clipboard.writeText()` inside a try/catch. On failure it falls back to `document.execCommand('copy')` after programmatically selecting the summary text. If that also fails, the text is visually selected so the user can copy with Ctrl+C.
 
-### Empty or whitespace input
+### No file loaded
 
-Before calling `analyzeSurface`, `summon()` trims the input. If the result is empty, it calls `showEmptyInputMessage()` (a UI function that displays a themed "The spirits find no message here…" notice) and returns without changing phase.
-
-### Sample log loading failure
-
-Sample logs are inline JS strings — no fetch, no network call. This error path cannot occur.
-
-### Regex exceptions
-
-All regex patterns in the analyzer are literals compiled at load time. They cannot throw at runtime. Each pattern is wrapped in a try/catch as a belt-and-suspenders measure; a pattern failure degrades gracefully to `null` for that check.
+Before calling `parsePcap`, `summon()` checks that a file or buffer is present. If not, it calls `showEmptyInputMessage()` with an in-theme "The spirits find no capture here…" notice. Phase stays `'idle'`.
 
 ---
 
@@ -302,45 +522,54 @@ All regex patterns in the analyzer are literals compiled at load time. They cann
 
 ### Approach
 
-The analyzer functions are pure and have no DOM or audio dependencies, making them the natural target for automated testing. The state machine transitions are logic-only functions and are equally testable. The UI layer and audio synthesizer are side-effect-only and are tested manually.
+The parser, detectors, and story template functions are pure with no DOM or audio dependencies — they are the natural target for automated testing. The state machine transitions are logic-only and equally testable. The UI layer and audio synthesizer are side-effect-only and are tested manually.
 
-Property-based testing is appropriate for the analyzer and state machine because:
-
-- Input variation is meaningful (any log string can trigger different branches).
-- Running 100+ iterations finds edge cases around regex boundaries and whitespace handling that example-based tests miss.
+Property-based testing is appropriate for the parser and detectors because:
+- Input variation is meaningful: any combination of packet types, counts, and byte patterns can trigger different branches.
+- Running 100+ iterations finds edge cases around threshold boundaries, byte-order corner cases, and malformed data that example-based tests miss.
 - The functions are pure, so there is no cost per iteration.
 
-The property-based testing library for this project is **[fast-check](https://fast-check.dev/)**, loaded from a CDN in the test HTML file (the production app itself has no CDN dependencies).
+The property-based testing library for this project is **[fast-check](https://fast-check.dev/)**, loaded from a CDN in the test HTML file. The production app itself has no CDN or npm dependencies.
 
 ### Unit tests
 
 Cover specific examples and integration points:
 
-- Each critical pattern triggers the correct `HiddenFinding.type` (one test per pattern).
-- The fallback surface finding fires when no pattern matches.
-- `buildSuggestedFix` returns a non-empty string for every `SurfaceFinding.type` value.
-- `reset()` from each of the four phases leaves state in the expected shape.
+- Each sample generator (`generateQuietHouseCapture`, `generateKnockingVisitorCapture`, `generateWhisperingWireCapture`) produces a parseable buffer with the expected finding types (or none for the quiet house).
+- Each detector returns the correct finding type when given a hand-crafted minimal packet set.
+- `buildSummary` returns correct protocol counts for a known packet array.
+- `generateFindingStory` returns all three fields for each finding type.
+- `reset()` from each of the four phases leaves the state object in the expected shape.
+- Clipboard fallback activates when `navigator.clipboard` is absent.
 
 ### Property-based tests
 
-Each test runs a minimum of 100 iterations. Each is tagged with its design property.
+Each test runs a minimum of 100 iterations and is tagged with its design property.
 
-| Test | Property tag | Covers |
+| Property | Tag | Requirement |
 |---|---|---|
-| `analyzeSurface` always returns a non-empty label | `Feature: seance-spirit-board, Property 1: Surface finding is always present` | Req 3.1, 3.4 |
-| `analyzeHidden` returns null for safe strings | `Feature: seance-spirit-board, Property 2: Hidden scan returns null for safe logs` | Req 3.2, 7.6 |
-| `analyzeHidden` detects injected critical patterns | `Feature: seance-spirit-board, Property 3: Hidden scan detects all critical patterns` | Req 3.2, 3.3 |
-| Strike fires at most once regardless of event count | `Feature: seance-spirit-board, Property 4: Strike fires at most once per analysis run` | Req 7.5 |
-| Strike never fires when hidden is null | `Feature: seance-spirit-board, Property 5: Strike never fires when no hidden pattern exists` | Req 7.6 |
-| Whitespace input stays in idle | `Feature: seance-spirit-board, Property 6: Whitespace-only input is rejected` | Req 1.3 |
-| Reset from any phase lands in idle | `Feature: seance-spirit-board, Property 7: Reset returns to idle from any phase` | Req 9.1, 9.2 |
+| Parser handles all 4 magic numbers | `Feature: seance-spirit-board, Property 1: Parser handles all supported magic numbers` | 3.1 |
+| Parser rejects pcapng buffers | `Feature: seance-spirit-board, Property 2: Parser rejects pcapng` | 1.4 |
+| Malformed packets skipped safely | `Feature: seance-spirit-board, Property 3: Malformed packets are skipped safely` | 3.3 |
+| Parser truncates at 50,000 | `Feature: seance-spirit-board, Property 4: Parser truncates at 50,000 packets` | 3.5 |
+| Port scan threshold boundary | `Feature: seance-spirit-board, Property 5: Port scan detector respects threshold` | 4.1 |
+| ARP spoof threshold boundary | `Feature: seance-spirit-board, Property 6: ARP spoof detector respects threshold` | 4.5 |
+| Credentials are masked | `Feature: seance-spirit-board, Property 7: Credentials are always masked` | 4.9 |
+| Finding shape completeness | `Feature: seance-spirit-board, Property 8: Finding shape is complete` | 4.6 |
+| Story functions return non-empty | `Feature: seance-spirit-board, Property 9: Story functions always return non-empty strings` | 5.2, 6.1, 6.5 |
+| Strike fires at most once | `Feature: seance-spirit-board, Property 10: Strike fires at most once per analysis run` | 10.5 |
+| Strike never fires without high-severity | `Feature: seance-spirit-board, Property 11: Strike never fires without a high-severity finding` | 10.6 |
+| Reset returns to idle from any phase | `Feature: seance-spirit-board, Property 12: Reset returns to idle from any phase` | 12.2 |
 
 ### Manual / visual checks
 
-- Victorian theme and parchment mode render correctly on Chrome, Firefox, Safari, Edge.
-- Planchette animation is smooth and lands on the correct zones.
+- Victorian dark-séance theme and parchment calm mode render correctly on Chrome, Firefox, Safari, Edge.
+- Both themes maintain ≥ 4.5:1 text contrast ratio.
+- Planchette animation is smooth; it walks across zones during summoning and slams to Critical Breach on strike.
 - 250 ms inversion flash is visible but not seizure-inducing.
-- Drone rises and sting fires cleanly with no clicks or pops.
+- Sub-bass drone rises during summoning; discordant sting fires on strike.
 - Mute toggle silences all sound immediately.
+- Drag-and-drop file area accepts `.pcap` files.
+- All three sample captures produce the correct experience paths: Quiet House has no strike; Knocking Visitor and Whispering Wire trigger the strike.
 - Layout is usable on a 1280 × 800 laptop viewport.
-- All three sample logs produce the correct experience paths (two with strike, one without).
+- App works when opened as a local file (no server required).

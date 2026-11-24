@@ -1,308 +1,267 @@
-# Implementation Plan: Séance Spirit-Board Log Analyzer
+# Implementation Plan: Packet Séance — pcap Analyzer
 
 ## Overview
 
-Build the complete single-page Séance app in three flat files (`index.html`, `style.css`, `app.js`). Tasks follow the user-specified order: layout → analyzer → spirit board → state machine → audio → strike/reveal → reset → testing. Each task is a concrete coding step; every step builds on the previous one so nothing is left orphaned.
+Migrate the Séance app from a text-log analyzer to a full packet-capture analyzer. Existing code in `app.js`, `index.html`, and `style.css` covers the state machine, audio stubs, UI helpers, and Victorian theme. The remaining work is: (a) adding four new pure-function modules (`samples.js`, `pcap.js`, `detectors.js`, `story.js`), (b) moving the audio implementation to `audio.js`, (c) updating the HTML and CSS to match the pcap UI and new zone names, and (d) wiring `app.js` to the pcap pipeline.
 
 ## Tasks
 
-- [x] 1. Scaffold HTML layout and sample logs
-  - [x] 1.1 Write `index.html` skeleton with all required sections
-    - Add `<textarea>` for log input and a "Summon Diagnosis" `<button>`
-    - Add three sample-log `<button>` elements (IDs: `sample-a`, `sample-b`, `sample-c`)
-    - Add a result panel `<div id="result-panel">` with placeholders for surface and hidden findings
-    - Add a Mute/Unmute `<button id="mute-btn">` fixed to a corner
-    - Add a Reset `<button id="reset-btn">`
-    - Link `style.css` and `app.js` (deferred)
-    - _Requirements: 1.1, 1.2, 2.1, 6.1, 8.4, 9.1_
-    - _Design: UI Layer, Components and Interfaces §4_
+- [~] 1. Update `index.html` for pcap UI
+  - Replace the `<textarea>` with a file-picker input (`<input type="file" accept=".pcap">`) and a drag-and-drop drop zone `<div id="drop-zone">`
+  - Keep the "Summon Diagnosis" button; rename "Copy Fix" to "Copy Summary" (update element ID to `copy-summary-btn`)
+  - Rename sample buttons: "The Quiet House", "The Knocking Visitor", "The Whispering Wire"; update `aria-label` attributes to match
+  - Rename spirit board zone labels from Syntax/Network/Auth/Memory/Critical to **Recon / DNS / Cleartext / Lateral / Critical Breach**; update `data-zone` attributes accordingly
+  - Add `<script>` tags (in load order, after `style.css`): `samples.js`, `pcap.js`, `detectors.js`, `story.js`, `audio.js`, `app.js`
+  - Add a `<p id="pcapng-msg">` and `<p id="error-msg">` message element (hidden by default) alongside the existing `#empty-input-msg`
+  - Add `<div id="summary-panel">` and `<div id="findings-list">` inside `#result-panel` for the calm summary and strike reveal respectively
+  - _Requirements: 1.1, 2.2, 7.1, 8.3_
 
-  - [x] 1.2 Write base `style.css` Victorian dark-séance theme
-    - Set CSS custom properties for brass, aged-parchment, candlelight palette
-    - Apply a serif font (Google Font with safe fallback)
-    - Style the textarea, buttons, result panel, and mute/reset controls
-    - Add `[data-phase]` selectors so CSS responds to `body[data-phase="summoning"]`, `calm`, `strike`, `idle`
-    - Add `.parchment-mode` class that switches to the daylight palette
-    - _Requirements: 5.1, 5.2, 10.1, 10.3_
-    - _Design: UI Layer §4_
+- [~] 2. Update `style.css` for new zone names and contrast
+  - Update any CSS comments or selectors that reference the old zone names (syntax, network, auth, memory) to the new names (recon, dns, cleartext, lateral)
+  - Verify that both dark-séance and parchment themes maintain ≥ 4.5:1 contrast for all text elements (no code changes needed if they already pass; add a comment confirming the check)
+  - Add drop-zone styles: dashed brass border, hover highlight, and an active drag-over state (`#drop-zone.drag-over`)
+  - Add `#summary-panel` and `#findings-list` layout styles consistent with the existing `.finding` card pattern
+  - _Requirements: 7.1, 7.4, 13.4_
 
-  - [x] 1.3 Define the three sample logs in `app.js` under `// --- SAMPLE LOGS ---`
-    - Sample A: contains an exposed token (triggers strike)
-    - Sample B: contains `DROP TABLE` (triggers strike)
-    - Sample C: contains only a `ReferenceError` with no critical pattern (no strike)
-    - Implement `fillTextarea(sampleText)` UI helper and wire the three sample buttons to it
-    - _Requirements: 2.1, 2.2, 2.3, 2.4_
-    - _Design: UI Layer §4, `fillTextarea`_
+- [ ] 3. Create `samples.js` — three synthetic pcap generators
+  - [ ] 3.1 Implement `generateQuietHouseCapture()` → `ArrayBuffer`
+    - Write a minimal valid classic pcap (magic `0xa1b2c3d4`, little-endian) with Ethernet link type
+    - Include ARP, DNS, and simple HTTP packets; no patterns that trigger any detector
+    - _Requirements: 2.1, 2.2_
 
-- [x] 2. Implement the log analyzer (pure functions)
-  - [x] 2.1 Implement `analyzeSurface(logText)` under `// --- ANALYZER ---`
-    - Check patterns in priority order: `ReferenceError`, `Cannot read propert`, `Uncaught`, `Maximum call stack`, `timeout|ETIMEDOUT`, then generic fallback
-    - Return a `SurfaceFinding` object `{ type, label, matchedText }`
-    - _Requirements: 3.1, 3.4, 3.5_
-    - _Design: Analyzer §1, `analyzeSurface`, Data Models_
+  - [ ] 3.2 Implement `generateKnockingVisitorCapture()` → `ArrayBuffer`
+    - Build TCP SYN packets from one source to 20 distinct destination ports (triggers port scan) and ICMP echo requests to 12 distinct hosts (triggers ping sweep)
+    - _Requirements: 2.1, 2.2, 4.1, 4.2_
 
-  - [ ]* 2.2 Write property test for `analyzeSurface` — Property 1
-    - **Property 1: Surface finding is always present**
-    - **Validates: Requirements 3.1, 3.4**
-    - Use fast-check; generate arbitrary non-empty strings; assert `label` and `type` are non-empty strings
+  - [ ] 3.3 Implement `generateWhisperingWireCapture()` → `ArrayBuffer`
+    - Build suspicious DNS queries (names > 40 chars with high Shannon entropy, 12 NXDOMAIN replies), an HTTP request with an `Authorization: Basic` header (credential masked in output), and ARP replies claiming one IP from two different MACs
+    - _Requirements: 2.1, 2.2, 4.3, 4.4, 4.5_
 
-  - [x] 2.3 Implement `analyzeHidden(logText)` under `// --- ANALYZER ---`
-    - Test patterns in priority order: exposed credential token, `password=`, `eval(`, `DROP TABLE`, `CRITICAL|FATAL`
-    - Return `HiddenFinding { type, matchedText, severity, remediation }` or `null`
-    - Wrap each regex in try/catch; degrade gracefully to `null` on exception
-    - _Requirements: 3.2, 3.3, 3.5_
-    - _Design: Analyzer §1, `analyzeHidden`, Error Handling_
+- [ ] 4. Create `pcap.js` — packet parser
+  - [ ] 4.1 Implement `parsePcap(arrayBuffer)` file-header reader
+    - Detect all four magic numbers; detect pcapng magic and throw `{ type: 'PCAPNG' }`; throw `{ type: 'INVALID' }` for unrecognised magic
+    - Stop after 50,000 packets (`truncated: true`); skip packets whose `inclLen` reads past the buffer (increment `skipped`); never throw on bad data
+    - _Requirements: 3.1, 3.3, 3.5, 1.4_
 
-  - [ ]* 2.4 Write property tests for `analyzeHidden` — Properties 2 and 3
-    - **Property 2: Hidden scan returns null for safe logs**
-    - **Validates: Requirements 3.2, 7.6**
-    - **Property 3: Hidden scan detects all critical patterns**
-    - **Validates: Requirements 3.2, 3.3**
-    - Use fast-check; generate safe strings (no critical substrings) and assert `null`; inject each critical pattern substring and assert non-null with correct `type`
+  - [ ]* 4.2 Write property test for `parsePcap` — Properties 1, 2, 3, 4
+    - **Property 1: Parser handles all supported magic numbers** — Validates: Requirements 3.1
+    - **Property 2: Parser rejects pcapng** — Validates: Requirements 1.4
+    - **Property 3: Malformed packets are skipped safely** — Validates: Requirements 3.3
+    - **Property 4: Parser truncates at 50,000 packets** — Validates: Requirements 3.5
 
-  - [x] 2.5 Implement `buildSuggestedFix(finding)` under `// --- ANALYZER ---`
-    - Return a human-readable one-sentence fix string for each `SurfaceFinding.type`
-    - _Requirements: 3.1, 6.1_
-    - _Design: Analyzer §1, `buildSuggestedFix`_
+  - [ ] 4.3 Implement `decodePacket(rawBytes, linkType, tsSeconds, tsNanoseconds)`
+    - Decode Ethernet → ARP or IPv4 → TCP/UDP/ICMP; decode DNS when src/dst port is 53
+    - Return the `DecodedPacket` shape from the design; set `protocol: 'unknown'` for unsupported link types or EtherTypes
+    - _Requirements: 3.2, 3.4_
 
-  - [x] 2.6 Implement `analyzeLog(logText)` as the public entry point
-    - Trims input; returns `null` if whitespace-only (caller handles the error message)
-    - Calls `analyzeSurface` and `analyzeHidden`; returns `AnalysisResult { surface, hidden }`
-    - _Requirements: 1.3, 3.1, 3.2_
-    - _Design: Data Models, Error Handling §empty-or-whitespace_
+  - [ ] 4.4 Implement `buildSummary(packets)`
+    - Aggregate total packets, duration, protocol counts, and top-5 talkers
+    - _Requirements: 5.1_
 
-  - [ ]* 2.7 Write property test for whitespace rejection — Property 6
-    - **Property 6: Whitespace-only input is rejected**
-    - **Validates: Requirements 1.3**
-    - Use fast-check; generate strings of only `\s` characters; call `analyzeLog`; assert it returns `null`
+- [ ] 5. Create `detectors.js` — detection rules
+  - [ ] 5.1 Define `THRESHOLDS` config object with all six threshold constants from the design
+    - `portScanMinPorts`, `portScanMaxHandshakeRatio`, `pingSweepMinHosts`, `dnsNxdomainBurst`, `dnsLongNameLength`, `dnsHighEntropy`, `arpSpoofMinMacs`
+    - _Requirements: 4.7_
 
-- [x] 3. Build the spirit board and planchette
-  - [~] 3.1 Add spirit board HTML to `index.html`
-    - Create a `<div id="spirit-board">` containing five labelled zone elements: Syntax, Network, Auth, Memory, Secrets/Critical
-    - Add `<div id="planchette">` as a child of the board
-    - _Requirements: 4.1_
-    - _Design: UI Layer §4, `ZONE_POSITIONS`_
+  - [ ] 5.2 Implement `detectPortScan(packets)` → `Finding | null`
+    - Group TCP SYN-only packets by src→dst pair; return a high-severity finding if distinct ports ≥ `portScanMinPorts` and handshake ratio ≤ `portScanMaxHandshakeRatio`
+    - _Requirements: 4.1, 4.6_
 
-  - [~] 3.2 Style the spirit board and planchette in `style.css`
-    - Apply Victorian brass and aged-parchment styling to the board
-    - Style the planchette with a brass token appearance
-    - Use `position: absolute` on the planchette so JS translate moves work
-    - _Requirements: 4.1, 10.3_
-    - _Design: UI Layer §4_
+  - [ ]* 5.3 Write property test for `detectPortScan` — Property 5
+    - **Property 5: Port scan detector respects threshold** — Validates: Requirements 4.1
 
-  - [x] 3.3 Implement `setPlanchetteZone(zone)` in `app.js` under `// --- UI ---`
-    - Encode `ZONE_POSITIONS` constant map with the five named positions
-    - Apply `transform: translate(x, y)` to the planchette element
-    - _Requirements: 4.2, 4.3_
-    - _Design: UI Layer §4, `setPlanchetteZone`, `ZONE_POSITIONS`_
+  - [ ] 5.4 Implement `detectPingSweep(packets)` → `Finding | null`
+    - Group ICMP echo requests by source; return a medium-severity finding if distinct destination IPs ≥ `pingSweepMinHosts`
+    - _Requirements: 4.2, 4.6_
 
-  - [~] 3.4 Add planchette walking animation to `style.css`
-    - CSS keyframe `@keyframes planchette-walk` with a subtle tremble (small random-feeling translate + rotate steps)
-    - Apply animation when `body[data-phase="summoning"]`
-    - Add a sharp transition for the slam move (`strike` phase, short duration + ease-in)
-    - _Requirements: 4.2, 4.3_
-    - _Design: UI Layer §4_
+  - [ ] 5.5 Implement `detectSuspiciousDns(packets)` → `Finding | null`
+    - Flag long names (> `dnsLongNameLength`), high-entropy names (Shannon H > `dnsHighEntropy`), and NXDOMAIN bursts (≥ `dnsNxdomainBurst` per client); severity: high
+    - _Requirements: 4.3, 4.6_
 
-- [x] 4. Implement the state machine
-  - [~] 4.1 Define state object and `setPhase` UI helper under `// --- STATE MACHINE ---`
-    - Declare `let state = { phase, result, droneHandle, strikeArmed, strikeTimer, strikeFired }`
-    - Implement `setPhase(phase)` that sets `data-phase` attribute on `<body>`
-    - _Requirements: 5.1, 5.2, 7.5_
-    - _Design: State Machine §3, state object_
+  - [ ] 5.6 Implement `detectCleartextCredentials(packets)` → `Finding | null`
+    - Scan TCP payloads for HTTP `Authorization: Basic`, `password=` form fields, and FTP `USER`/`PASS` commands; mask credentials (first ≤ 4 chars + `****`); severity: high
+    - _Requirements: 4.4, 4.9_
 
-  - [~] 4.2 Implement `summon(logText)` transition
-    - Guard: if already not in `idle`, return
-    - Call `analyzeLog`; if null, call `showEmptyInputMessage()` and return
-    - Set `state.result`, arm `strikeArmed` if `hidden !== null`
-    - Call `setPhase('summoning')`, `setPlanchetteZone` (cycle through zones), start drone, schedule `_tensionComplete` after ~3 s
-    - _Requirements: 1.3, 5.1, 7.6_
-    - _Design: State Machine §3, `summon` transition_
+  - [ ]* 5.7 Write property test for `detectCleartextCredentials` — Property 7
+    - **Property 7: Credentials are always masked** — Validates: Requirements 4.9
 
-  - [~] 4.3 Implement `_tensionComplete()` transition
-    - Switch `phase` to `'calm'`
-    - Stop drone ramp, call `setPhase('calm')`, add `.parchment-mode` to body
-    - Call `showSurfaceFinding(finding, fix)` UI function
-    - _Requirements: 5.2, 5.3_
-    - _Design: State Machine §3, `_tensionComplete` transition_
+  - [ ] 5.8 Implement `detectArpSpoofing(packets)` → `Finding | null`
+    - Map `ip → Set<mac>` from ARP replies; return a high-severity finding if any IP appears with ≥ `arpSpoofMinMacs` distinct MACs
+    - _Requirements: 4.5, 4.6_
 
-  - [~] 4.4 Implement `copyFix()` transition
-    - Copy fix text to clipboard using `navigator.clipboard.writeText`; fall back to `execCommand`; fall back to visual selection
-    - Call `showCopyConfirmation()`
-    - If `strikeArmed`, start 4 s timer calling `_triggerStrike`
-    - _Requirements: 6.1, 6.2, 6.3, 7.1_
-    - _Design: State Machine §3, `copyFix`; Error Handling §Clipboard_
+  - [ ]* 5.9 Write property test for `detectArpSpoofing` — Property 6
+    - **Property 6: ARP spoof detector respects threshold** — Validates: Requirements 4.5
 
-  - [~] 4.5 Implement `pointerNearInput()` event-to-transition bridge
-    - Add `pointermove` listener on the textarea / input area
-    - If `strikeArmed && !strikeFired && phase === 'calm'`, call `_triggerStrike()` immediately
-    - _Requirements: 7.2_
-    - _Design: State Machine §3, `pointerNearInput`_
+  - [ ] 5.10 Implement `runDetectors(packets)` → `Finding[]`
+    - Call all five detectors and return the array of non-null results
+    - _Requirements: 4.6, 4.8_
 
-  - [ ]* 4.6 Write property tests for state machine invariants — Properties 4 and 5
-    - **Property 4: Strike fires at most once per analysis run**
-    - **Validates: Requirements 7.5**
-    - **Property 5: Strike never fires when no hidden pattern exists**
-    - **Validates: Requirements 7.6**
-    - Simulate repeated `copyFix` calls and `pointerNearInput` events; assert strike count ≤ 1; for null-hidden logs assert strike count = 0
+  - [ ]* 5.11 Write property test for finding shape — Property 8
+    - **Property 8: Finding shape is complete** — for any non-null finding from any detector, `type`, `severity`, `hosts`, `evidence`, and `packetCount` are all present and non-empty/non-zero
+    - **Validates: Requirements 4.6**
 
-  - [ ]* 4.7 Write property test for reset invariant — Property 7
-    - **Property 7: Reset returns to idle from any phase**
-    - **Validates: Requirements 9.1, 9.2**
-    - Drive state machine to each phase programmatically; call `reset()`; assert `phase === 'idle'`, `strikeFired === false`, `strikeTimer === null`
+- [ ] 6. Create `story.js` — narrative templates
+  - [ ] 6.1 Implement `generateSummaryStory(summary)` → `string`
+    - Return a short harmless ghost-story paragraph referencing real protocol counts and packet totals; always return a non-empty string
+    - _Requirements: 5.2, 6.3_
 
-- [ ] 5. Implement the audio synthesizer
-  - [~] 5.1 Implement `initAudio()` under `// --- AUDIO ---`
-    - Create `AudioContext` (with `webkitAudioContext` fallback) on first call; store in module variable
-    - Create and connect `masterGain` node to `context.destination`
-    - If neither API is available, set `audioDisabled = true` and return
-    - _Requirements: 8.1, 8.3, 8.5_
-    - _Design: Audio Synthesizer §2, `initAudio`, Error Handling §Web Audio API unavailable_
+  - [ ] 6.2 Implement `generateFindingStory(finding)` → `{ story, explanation, tip }`
+    - Template-driven narration for all five finding types; name real hosts from `finding.hosts`; all three fields must always be non-empty strings
+    - _Requirements: 6.1, 6.2, 6.4_
 
-  - [~] 5.2 Implement `playDrone(durationSeconds)` and return a `DroneHandle`
-    - Build two oscillators (`sine` ~40 Hz, `sawtooth` ~60 Hz)
-    - Feed both through a lowpass `BiquadFilterNode` (cutoff ~200 Hz, Q 5)
-    - Apply a linear gain ramp 0 → 0.6 over `durationSeconds`
+  - [ ]* 6.3 Write property test for story functions — Property 9 and Property 12
+    - **Property 9: Story functions always return non-empty strings** — `generateSummaryStory` and `generatePeacefulStory` always return non-empty strings; `generateFindingStory` returns all three non-empty fields for each known type
+    - **Property 12: `generateFindingStory` returns non-empty strings for all five finding types**
+    - **Validates: Requirements 5.2, 6.1, 6.5**
+
+  - [ ] 6.4 Implement `generatePeacefulStory(summary)` → `string`
+    - Return a short peaceful story for a clean capture with no findings; always a non-empty string
+    - _Requirements: 6.5_
+
+- [ ] 7. Create `audio.js` — full audio synthesizer
+  - [~] 7.1 Move `initAudio()` from `app.js` to `audio.js`; keep the same signature and fallback logic
+    - Delete the stub in `app.js` once `audio.js` is loaded via script tag before `app.js`
+    - _Requirements: 11.1, 11.2, 11.4_
+
+  - [~] 7.2 Implement `playDrone(durationSeconds)` → `DroneHandle` in `audio.js`
+    - Two oscillators (`sine` ~40 Hz, `sawtooth` ~60 Hz) → `BiquadFilterNode` (lowpass 200 Hz, Q 5) → gain ramp 0 → 0.6
     - Return `{ stop() }` that ramps gain to 0.0001 over 0.3 s then disconnects
-    - _Requirements: 5.1, 8.1, 8.2_
-    - _Design: Audio Synthesizer §2, `playDrone`_
+    - Remove the stub from `app.js`
+    - _Requirements: 8.1, 11.1_
 
-  - [~] 5.3 Implement `playSting()`
-    - Build three oscillators at dissonant intervals (~440 Hz sawtooth, ~466 Hz sawtooth, ~523 Hz square)
-    - Feed through a `WaveShaperNode` with a hard-clip distortion curve
-    - Attack 5 ms, exponential decay to 0.0001 over 0.4 s; auto-stop oscillators at 0.5 s
-    - _Requirements: 7.3, 8.1, 8.2_
-    - _Design: Audio Synthesizer §2, `playSting`_
+  - [~] 7.3 Implement `playSting()` in `audio.js`
+    - Three oscillators at ~440 Hz (sawtooth), ~466 Hz (sawtooth), ~523 Hz (square) → `WaveShaperNode` (hard-clip) → gain (5 ms attack, exponential decay to 0.0001 over 0.4 s); auto-stop at 0.5 s
+    - Remove the stub from `app.js`
+    - _Requirements: 10.3, 11.1_
 
-  - [~] 5.4 Implement `stopAll()` and wire mute toggle
-    - `stopAll()`: call `stop()` on any live `DroneHandle`, disconnect remaining nodes
-    - Mute-toggle click: toggle `masterGain.gain.value` between `0` and `1`; update button label
-    - _Requirements: 8.4, 9.2_
-    - _Design: Audio Synthesizer §2, `stopAll`_
+  - [~] 7.4 Implement `stopAll()` and `setMute(muted)` in `audio.js`
+    - `stopAll()`: stop any live DroneHandle and disconnect remaining nodes
+    - `setMute(muted)`: set `masterGain.gain.value` to 0 or 1
+    - Remove stub from `app.js`; update mute-button handler in `app.js` to call `setMute()`
+    - _Requirements: 11.3, 12.2_
 
-- [ ] 6. Implement the strike and hidden-finding reveal
-  - [~] 6.1 Implement `_triggerStrike()` transition
-    - Guard: `if (state.strikeFired) return;` — set `strikeFired = true` immediately
-    - Clear any pending `strikeTimer`
-    - Call `setPhase('strike')`, `triggerFlash()`, `playSting()`, `setPlanchetteZone('critical')`
-    - After flash resolves, call `showHiddenFinding(state.result.hidden)`
-    - _Requirements: 7.3, 7.4, 7.5_
-    - _Design: State Machine §3, `_triggerStrike`_
+- [~] 8. Update `app.js` — pcap pipeline and UI wiring
+  - [~] 8.1 Expand state object with `packets`, `summary`, and `findings` fields
+    - Add `packets: null`, `summary: null`, `findings: []` alongside existing fields
+    - _Requirements: 10.5, 10.6, 12.2_
 
-  - [~] 6.2 Implement `triggerFlash()` UI function
-    - Add `.invert-flash` class to `<body>`; remove it after 250 ms via `setTimeout`
-    - _Requirements: 7.3_
-    - _Design: UI Layer §4, `triggerFlash`_
+  - [ ] 8.2 Implement file-load entry point: `FileReader` + File API
+    - Read the selected or dropped `.pcap` file as `ArrayBuffer` via `FileReader.readAsArrayBuffer`
+    - Check `byteLength` ≤ 5 MB before parsing; call `showErrorMessage()` if too large
+    - Call `summon(arrayBuffer)` on success
+    - Wire `<input type="file">` `change` event and `#drop-zone` drag-and-drop events (`dragenter`, `dragover`, `dragleave`, `drop`)
+    - _Requirements: 1.1, 1.5_
 
-  - [~] 6.3 Add `.invert-flash` CSS rule
-    - Apply `filter: invert(1)` to `body.invert-flash` for the 250 ms window
-    - _Requirements: 7.3_
-    - _Design: UI Layer §4_
+  - [~] 8.3 Rewrite `summon(arrayBuffer)` to use the pcap pipeline
+    - Accept `ArrayBuffer` instead of `logText`
+    - Call `parsePcap(arrayBuffer)`; catch `{ type: 'PCAPNG' }` → `showPcapngMessage()`; catch `{ type: 'INVALID' }` → `showErrorMessage(msg)`
+    - On success: call `buildSummary(packets)`, `runDetectors(packets)`; store into `state`; set `strikeArmed = findings.some(f => f.severity === 'high')`
+    - Start planchette walk across recon → dns → cleartext → lateral zones
+    - _Requirements: 1.2, 3.1, 3.5, 4.1–4.5, 8.1_
 
-  - [~] 6.4 Implement `showSurfaceFinding(finding, fix)` and `showHiddenFinding(finding)` UI functions
-    - `showSurfaceFinding`: populate result panel with surface label, matched text, fix string, and "Copy Fix" button
-    - `showHiddenFinding`: populate result panel with hidden type, severity badge, matched text (truncated to 80 chars), and remediation
-    - _Requirements: 5.3, 7.4_
-    - _Design: UI Layer §4, `showSurfaceFinding`, `showHiddenFinding`_
+  - [~] 8.4 Rename `copyFix()` to `copySummary()` and update to copy summary text
+    - Read summary text from `#summary-panel` instead of `#surface-fix`
+    - Arm the 4 s strike timer if `strikeArmed`
+    - Update the DOMContentLoaded handler to listen on `#copy-summary-btn`
+    - _Requirements: 9.1, 9.2, 10.1_
 
-  - [~] 6.5 Implement `showCopyConfirmation()` UI function
-    - Briefly display "Copied!" feedback near the "Copy Fix" button; auto-hide after ~1.5 s
-    - _Requirements: 6.2_
-    - _Design: UI Layer §4, `showCopyConfirmation`_
+  - [~] 8.5 Rewrite `_tensionComplete()` to call `showSummary()`
+    - After stopping the drone and switching to parchment mode, call `showSummary(state.summary, storyText)` where `storyText` comes from `generateSummaryStory(state.summary)`
+    - _Requirements: 8.2, 8.3_
 
-  - [~] 6.6 Implement `showEmptyInputMessage()` UI function
-    - Display an in-theme message: "The spirits find no message here…" in the result panel
-    - Do not change `state.phase` (stays in `idle`)
-    - _Requirements: 1.3_
-    - _Design: Error Handling §empty-or-whitespace_
+  - [ ] 8.6 Implement `showSummary(summary, storyText)` UI function
+    - Populate `#summary-panel` with packet count, duration, protocol breakdown, top talkers, and the story paragraph — all via `textContent`
+    - Show `#result-panel` and the "Copy Summary" button
+    - _Requirements: 5.1, 5.2, 5.3_
 
-- [ ] 7. Implement reset and wire all event handlers
-  - [~] 7.1 Implement `reset()` transition
-    - Clear `strikeTimer` via `clearTimeout`
-    - Call `stopAll()`
-    - Reset all state fields to defaults
-    - Call `setPhase('idle')`, remove `.parchment-mode`, clear result panel content
-    - _Requirements: 9.1, 9.2_
-    - _Design: State Machine §3, `reset` transition_
+  - [ ] 8.7 Implement `showFindings(findings)` UI function for the strike reveal
+    - For each finding call `generateFindingStory(finding)` and render story, explanation, and tip into `#findings-list` using `textContent`
+    - If `findings` is empty, call `generatePeacefulStory(state.summary)` and show it instead
+    - _Requirements: 6.1, 10.4, 10.6_
 
-  - [~] 7.2 Wire all UI event handlers under `// --- UI ---`
-    - "Summon Diagnosis" button → `initAudio()` then `summon(textarea.value)`
-    - "Copy Fix" button → `copyFix()`
-    - Reset button → `reset()`
-    - Textarea `pointermove` → `pointerNearInput()`
-    - Mute button → mute-toggle logic (already in `stopAll` section; just wire the DOM event)
-    - Sample buttons A/B/C → `fillTextarea(sampleText)`
-    - _Requirements: 1.2, 2.2, 6.1, 7.2, 8.4, 9.1_
-    - _Design: UI Layer §4_
+  - [ ] 8.8 Implement `showPcapngMessage()` and `showErrorMessage(msg)` UI functions
+    - `showPcapngMessage()`: reveal `#pcapng-msg` with in-theme instructions for exporting to classic pcap; auto-hide after 6 s
+    - `showErrorMessage(msg)`: reveal `#error-msg` with the provided message; auto-hide after 5 s
+    - Both keep `state.phase === 'idle'`
+    - _Requirements: 1.4, 1.5_
 
-  - [~] 7.3 Checkpoint — Ensure manual smoke test passes
-    - Open `index.html` in a browser; paste each sample log and step through the full 3-beat loop
-    - Verify parchment mode, flash, sting, planchette slam, and hidden finding all work
-    - Ensure all tests pass, ask the user if questions arise.
+  - [~] 8.9 Update `_triggerStrike()` to call `showFindings()` after the flash
+    - Replace the existing `showHiddenFinding(state.result.hidden)` call with `showFindings(state.findings)`
+    - _Requirements: 10.3, 10.4_
 
-- [ ] 8. Final testing — property-based and unit tests
-  - [~] 8.1 Create `tests/index.html` test runner
-    - Load fast-check from CDN (production files have no CDN dependency)
-    - Import the testable pure functions from `app.js` (or a shared module) and run all property tests
-    - _Requirements: 3.5_
-    - _Design: Testing Strategy_
+  - [~] 8.10 Update `reset()` to clear new state fields and hide new panels
+    - Clear `packets`, `summary`, `findings`; hide `#summary-panel`, `#findings-list`, `#pcapng-msg`, `#error-msg`
+    - _Requirements: 12.1, 12.2_
 
-  - [ ]* 8.2 Confirm all seven property tests pass
-    - Run the test file in a browser; verify all 7 properties report green (≥ 100 iterations each)
-    - Annotate each test with its property tag: `Feature: seance-spirit-board, Property N: …`
-    - _Design: Testing Strategy, property-based tests table_
+  - [~] 8.11 Update `loadSampleCapture(name, buffer)` wiring for the three pcap sample buttons
+    - Wire "The Quiet House" → `generateQuietHouseCapture()`, "The Knocking Visitor" → `generateKnockingVisitorCapture()`, "The Whispering Wire" → `generateWhisperingWireCapture()`
+    - Show capture name and packet count after loading
+    - _Requirements: 2.1, 2.2, 2.3_
 
-  - [ ]* 8.3 Write unit tests for specific examples
-    - Each critical pattern triggers the correct `HiddenFinding.type` (one test per pattern — 5 tests)
-    - Fallback surface finding fires when no pattern matches
-    - `buildSuggestedFix` returns a non-empty string for every `SurfaceFinding.type`
-    - `reset()` from each of the four phases leaves state in the expected shape
-    - _Requirements: 3.1, 3.2, 3.3, 3.4, 9.1_
-    - _Design: Testing Strategy, unit tests_
+- [ ] 9. Checkpoint — Smoke test the full 3-beat loop
+  - Ensure all tests pass, ask the user if questions arise.
+  - Open `index.html` in a browser; verify: file picker, drag-and-drop, all three sample captures, planchette walk, parchment flip, copy summary, 4 s timer, pointer trigger, flash + sting + planchette slam, findings reveal, mute toggle, reset
 
-  - [~] 8.4 Final checkpoint — All tests pass and app is production-ready
-    - Verify static-file hosting works (open via `file://` or a local server with no config)
-    - Confirm no external audio files, no build step, relative paths only
-    - Ensure all tests pass, ask the user if questions arise.
-    - _Requirements: 10.1, 10.2, 10.3_
+- [ ] 10. Property-based tests (optional)
+  - [ ]* 10.1 Write tests for Properties 1–4 (parsePcap invariants)
+    - **Property 1: Parser handles all supported magic numbers** — Validates: Requirements 3.1
+    - **Property 2: Parser rejects pcapng** — Validates: Requirements 1.4
+    - **Property 3: Malformed packets are skipped safely** — Validates: Requirements 3.3
+    - **Property 4: Parser truncates at 50,000 packets** — Validates: Requirements 3.5
+
+  - [ ]* 10.2 Write tests for Properties 5–8 (detector invariants)
+    - **Property 5: Port scan detector respects threshold** — Validates: Requirements 4.1
+    - **Property 6: ARP spoof detector respects threshold** — Validates: Requirements 4.5
+    - **Property 7: Credentials are always masked** — Validates: Requirements 4.9
+    - **Property 8: Finding shape is complete** — Validates: Requirements 4.6
+
+  - [ ]* 10.3 Write tests for Properties 9–12 (story and state-machine invariants)
+    - **Property 9: Story functions always return non-empty strings** — Validates: Requirements 5.2, 6.1, 6.5
+    - **Property 10: Strike fires at most once per analysis run** — Validates: Requirements 10.5
+    - **Property 11: Strike never fires without a high-severity finding** — Validates: Requirements 10.6
+    - **Property 12: Reset returns to idle from any phase** — Validates: Requirements 12.2
+
+  - [ ]* 10.4 Create `tests/index.html` test runner
+    - Load fast-check from CDN; import and run all property tests in one page
+    - _Requirements: 3.6_
+
+- [ ] 11. Final checkpoint — All tests pass and app is production-ready
+  - Ensure all tests pass, ask the user if questions arise.
+  - Verify static-file hosting: open via `file://` and confirm no missing-script errors
+  - Confirm all script tags load in correct order, no ES module imports, no external audio files
+  - Verify both themes pass 4.5:1 contrast check
+  - _Requirements: 13.1, 13.2, 13.3, 13.4_
 
 ## Notes
 
 - Tasks marked with `*` are optional and can be skipped for a faster MVP
-- Each task references specific requirements and design sections for full traceability
-- Checkpoints (7.3, 8.4) ensure incremental validation before moving to the next phase
-- Property tests validate universal correctness; unit tests validate specific examples and edge cases
-- The test runner (`tests/index.html`) is a dev artifact — it loads fast-check from CDN; the production app has zero external dependencies
+- `[x]` tasks are fully implemented in existing code and require no changes
+- `[~]` tasks have a working stub or partial implementation that needs updating for the pcap pipeline
+- `[ ]` tasks have no existing implementation
+- All DOM writes for capture-derived data use `textContent`, never `innerHTML`
+- The `tests/index.html` runner loads fast-check from CDN; the production app has zero external dependencies
 
 ## Task Dependency Graph
 
 ```json
 {
   "waves": [
-    { "id": 0, "tasks": ["1.1"] },
-    { "id": 1, "tasks": ["1.2", "1.3"] },
-    { "id": 2, "tasks": ["2.1"] },
-    { "id": 3, "tasks": ["2.2", "2.3"] },
-    { "id": 4, "tasks": ["2.4", "2.5"] },
-    { "id": 5, "tasks": ["2.6"] },
-    { "id": 6, "tasks": ["2.7", "3.1"] },
-    { "id": 7, "tasks": ["3.2", "3.3"] },
-    { "id": 8, "tasks": ["3.4"] },
-    { "id": 9, "tasks": ["4.1"] },
-    { "id": 10, "tasks": ["4.2"] },
-    { "id": 11, "tasks": ["4.3"] },
-    { "id": 12, "tasks": ["4.4", "4.5"] },
-    { "id": 13, "tasks": ["4.6", "4.7"] },
-    { "id": 14, "tasks": ["5.1"] },
-    { "id": 15, "tasks": ["5.2", "5.3"] },
-    { "id": 16, "tasks": ["5.4"] },
-    { "id": 17, "tasks": ["6.1", "6.2", "6.3"] },
-    { "id": 18, "tasks": ["6.4", "6.5", "6.6"] },
-    { "id": 19, "tasks": ["7.1"] },
-    { "id": 20, "tasks": ["7.2"] },
-    { "id": 21, "tasks": ["7.3"] },
-    { "id": 22, "tasks": ["8.1"] },
-    { "id": 23, "tasks": ["8.2", "8.3"] },
-    { "id": 24, "tasks": ["8.4"] }
+    { "id": 0, "tasks": ["1", "2"] },
+    { "id": 1, "tasks": ["3.1", "3.2", "3.3"] },
+    { "id": 2, "tasks": ["4.1", "4.3"] },
+    { "id": 3, "tasks": ["4.2", "4.4"] },
+    { "id": 4, "tasks": ["5.1"] },
+    { "id": 5, "tasks": ["5.2", "5.4", "5.5", "5.6", "5.8"] },
+    { "id": 6, "tasks": ["5.3", "5.7", "5.9", "5.10"] },
+    { "id": 7, "tasks": ["5.11", "6.1", "6.2", "6.4"] },
+    { "id": 8, "tasks": ["6.3", "7.1", "7.2", "7.3", "7.4"] },
+    { "id": 9, "tasks": ["8.1"] },
+    { "id": 10, "tasks": ["8.2", "8.3", "8.5", "8.6", "8.7", "8.8"] },
+    { "id": 11, "tasks": ["8.4", "8.9", "8.10", "8.11"] },
+    { "id": 12, "tasks": ["9"] },
+    { "id": 13, "tasks": ["10.1", "10.2", "10.3"] },
+    { "id": 14, "tasks": ["10.4"] },
+    { "id": 15, "tasks": ["11"] }
   ]
 }
 ```

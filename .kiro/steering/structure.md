@@ -1,19 +1,17 @@
-# Séance — Structure
+# Packet Séance — Structure
 
-## Files
-- `index.html` — page layout: input area, spirit board, result panel, mute toggle
-- `style.css` — all styling, themes (dark séance mode and parchment calm mode) and animations
-- `app.js` — log parser, state machine, audio synth, UI logic
-
-## Organization inside app.js
-Keep these sections clearly separated with comment headers:
-1. Sample logs
-2. Log analyzer (surface finding and hidden critical pattern detection)
-3. Audio synthesizer
-4. 3-beat state machine (idle, summoning, calm, strike)
-5. UI event handlers
+## Files (no build step, loaded with script tags in this order)
+- `index.html` — layout: upload area, sample buttons, spirit board, results, mute toggle
+- `style.css` — themes and animations
+- `samples.js` — functions that generate the 3 sample captures as bytes
+- `pcap.js` — pcap reader and packet decoder (pure functions)
+- `detectors.js` — detection rules and severity (pure functions)
+- `story.js` — ghost-story, explanation and defender-tip templates (pure functions)
+- `audio.js` — Web Audio synthesizer and mute control
+- `app.js` — state machine (idle, summoning, calm, strike), UI wiring, reset and cleanup
 
 ## Repository rules
-- Repo is public with an open-source license (MIT)
+- Public repo with MIT license
 - `.kiro/` (steering, specs, hooks) MUST be committed and never added to `.gitignore`
-- Keep the project in a single flat folder with no nested build output
+- Keep a short README with: what it is, how to run it, how to capture a pcap, and the Kiro features used
+- Each module exposes plain global functions with clear names, so teammates can work on different files without merge conflicts
