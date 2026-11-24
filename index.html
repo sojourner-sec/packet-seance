@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Séance — Spirit-Board Log Analyzer</title>
+  <meta name="description" content="A Victorian spirit-board that analyzes your developer error logs and stack traces." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=UnifrakturMaguntia&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-phase="idle">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       HEADER
+  ═══════════════════════════════════════════════════════════ -->
+  <header class="app-header">
+    <h1 class="app-title">Séance</h1>
+    <p class="app-subtitle">The spirits shall read your logs&hellip;</p>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       MAIN CONTENT
+  ═══════════════════════════════════════════════════════════ -->
+  <main class="app-main">
+
+    <!-- Log-input section -->
+    <section class="input-section" aria-label="Log Input">
+      <label for="log-input" class="input-label">
+        Inscribe your error log or stack trace below:
+      </label>
+
+      <textarea
+        id="log-input"
+        class="log-textarea"
+        rows="12"
+        placeholder="Paste your error log or stack trace here…"
+        aria-label="Error log or stack trace input"
+        spellcheck="false"
+      ></textarea>
+
+      <!-- Empty-input message (shown by showEmptyInputMessage()) -->
+      <p id="empty-input-msg" class="empty-input-msg" hidden aria-live="polite">
+        The spirits find no message here&hellip; Inscribe your log before summoning.
+      </p>
+
+      <!-- Primary action -->
+      <button id="summon-btn" class="btn btn--primary" type="button">
+        Summon Diagnosis
+      </button>
+    </section>
+
+    <!-- Sample-log shortcuts -->
+    <section class="samples-section" aria-label="Sample Haunted Logs">
+      <p class="samples-label">Or invoke a cursed sample:</p>
+      <div class="samples-row" role="group" aria-label="Sample log buttons">
+        <button id="sample-a" class="btn btn--sample" type="button"
+                aria-label="Load sample log A — exposed token">
+          Sample A <span class="sample-hint">(Exposed Token)</span>
+        </button>
+        <button id="sample-b" class="btn btn--sample" type="button"
+                aria-label="Load sample log B — SQL injection">
+          Sample B <span class="sample-hint">(SQL Injection)</span>
+        </button>
+        <button id="sample-c" class="btn btn--sample" type="button"
+                aria-label="Load sample log C — harmless error">
+          Sample C <span class="sample-hint">(No Hidden Peril)</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────────
+         SPIRIT BOARD — populated by task 3.1
+    ───────────────────────────────────────────────────────── -->
+    <section class="board-section" aria-label="Spirit Board">
+      <div id="spirit-board">
+        <!-- Spirit board zones and planchette added in task 3.1 -->
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────────
+         RESULT PANEL
+    ───────────────────────────────────────────────────────── -->
+    <section id="result-panel" class="result-panel" aria-live="polite" aria-label="Analysis Results" hidden>
+
+      <!-- Beat 2: surface finding (calm phase) -->
+      <div id="surface-finding" class="finding finding--surface" hidden>
+        <h2 class="finding-title">The Spirits Reveal&hellip;</h2>
+        <p id="surface-label" class="finding-label"></p>
+        <pre id="surface-match" class="finding-match"></pre>
+        <p id="surface-fix" class="finding-fix"></p>
+        <div class="copy-row">
+          <button id="copy-fix-btn" class="btn btn--copy" type="button">
+            Copy Fix
+          </button>
+          <span id="copy-confirm" class="copy-confirm" hidden aria-live="polite">Copied!</span>
+        </div>
+      </div>
+
+      <!-- Beat 3: hidden critical finding (strike phase) -->
+      <div id="hidden-finding" class="finding finding--hidden" hidden>
+        <h2 class="finding-title finding-title--warning">&#x26A0;&#xFE0F; Critical Breach Detected</h2>
+        <span id="hidden-severity" class="severity-badge"></span>
+        <p id="hidden-type" class="finding-label"></p>
+        <pre id="hidden-match" class="finding-match finding-match--danger"></pre>
+        <p id="hidden-remediation" class="finding-remediation"></p>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       FIXED UTILITY CONTROLS
+  ═══════════════════════════════════════════════════════════ -->
+
+  <!-- Mute / Unmute toggle — fixed to top-right corner -->
+  <button id="mute-btn" class="btn btn--utility btn--mute" type="button"
+          aria-label="Mute audio" aria-pressed="false">
+    🔊 Mute
+  </button>
+
+  <!-- Reset — fixed to bottom-right corner -->
+  <button id="reset-btn" class="btn btn--utility btn--reset" type="button"
+          aria-label="Reset and analyze a new log">
+    &#x21BA; New Séance
+  </button>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCRIPTS
+  ═══════════════════════════════════════════════════════════ -->
+  <script src="app.js" defer></script>
+
+</body>
+</html>

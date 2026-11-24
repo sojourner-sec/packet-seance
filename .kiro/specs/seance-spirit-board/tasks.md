@@ -6,8 +6,8 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
 
 ## Tasks
 
-- [ ] 1. Scaffold HTML layout and sample logs
-  - [ ] 1.1 Write `index.html` skeleton with all required sections
+- [x] 1. Scaffold HTML layout and sample logs
+  - [x] 1.1 Write `index.html` skeleton with all required sections
     - Add `<textarea>` for log input and a "Summon Diagnosis" `<button>`
     - Add three sample-log `<button>` elements (IDs: `sample-a`, `sample-b`, `sample-c`)
     - Add a result panel `<div id="result-panel">` with placeholders for surface and hidden findings
@@ -17,7 +17,7 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
     - _Requirements: 1.1, 1.2, 2.1, 6.1, 8.4, 9.1_
     - _Design: UI Layer, Components and Interfaces §4_
 
-  - [ ] 1.2 Write base `style.css` Victorian dark-séance theme
+  - [x] 1.2 Write base `style.css` Victorian dark-séance theme
     - Set CSS custom properties for brass, aged-parchment, candlelight palette
     - Apply a serif font (Google Font with safe fallback)
     - Style the textarea, buttons, result panel, and mute/reset controls
@@ -26,7 +26,7 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
     - _Requirements: 5.1, 5.2, 10.1, 10.3_
     - _Design: UI Layer §4_
 
-  - [ ] 1.3 Define the three sample logs in `app.js` under `// --- SAMPLE LOGS ---`
+  - [x] 1.3 Define the three sample logs in `app.js` under `// --- SAMPLE LOGS ---`
     - Sample A: contains an exposed token (triggers strike)
     - Sample B: contains `DROP TABLE` (triggers strike)
     - Sample C: contains only a `ReferenceError` with no critical pattern (no strike)
@@ -35,7 +35,7 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
     - _Design: UI Layer §4, `fillTextarea`_
 
 - [ ] 2. Implement the log analyzer (pure functions)
-  - [ ] 2.1 Implement `analyzeSurface(logText)` under `// --- ANALYZER ---`
+  - [~] 2.1 Implement `analyzeSurface(logText)` under `// --- ANALYZER ---`
     - Check patterns in priority order: `ReferenceError`, `Cannot read propert`, `Uncaught`, `Maximum call stack`, `timeout|ETIMEDOUT`, then generic fallback
     - Return a `SurfaceFinding` object `{ type, label, matchedText }`
     - _Requirements: 3.1, 3.4, 3.5_
@@ -46,7 +46,7 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
     - **Validates: Requirements 3.1, 3.4**
     - Use fast-check; generate arbitrary non-empty strings; assert `label` and `type` are non-empty strings
 
-  - [ ] 2.3 Implement `analyzeHidden(logText)` under `// --- ANALYZER ---`
+  - [~] 2.3 Implement `analyzeHidden(logText)` under `// --- ANALYZER ---`
     - Test patterns in priority order: exposed credential token, `password=`, `eval(`, `DROP TABLE`, `CRITICAL|FATAL`
     - Return `HiddenFinding { type, matchedText, severity, remediation }` or `null`
     - Wrap each regex in try/catch; degrade gracefully to `null` on exception
@@ -60,12 +60,12 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
     - **Validates: Requirements 3.2, 3.3**
     - Use fast-check; generate safe strings (no critical substrings) and assert `null`; inject each critical pattern substring and assert non-null with correct `type`
 
-  - [ ] 2.5 Implement `buildSuggestedFix(finding)` under `// --- ANALYZER ---`
+  - [~] 2.5 Implement `buildSuggestedFix(finding)` under `// --- ANALYZER ---`
     - Return a human-readable one-sentence fix string for each `SurfaceFinding.type`
     - _Requirements: 3.1, 6.1_
     - _Design: Analyzer §1, `buildSuggestedFix`_
 
-  - [ ] 2.6 Implement `analyzeLog(logText)` as the public entry point
+  - [~] 2.6 Implement `analyzeLog(logText)` as the public entry point
     - Trims input; returns `null` if whitespace-only (caller handles the error message)
     - Calls `analyzeSurface` and `analyzeHidden`; returns `AnalysisResult { surface, hidden }`
     - _Requirements: 1.3, 3.1, 3.2_
@@ -77,26 +77,26 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
     - Use fast-check; generate strings of only `\s` characters; call `analyzeLog`; assert it returns `null`
 
 - [ ] 3. Build the spirit board and planchette
-  - [ ] 3.1 Add spirit board HTML to `index.html`
+  - [~] 3.1 Add spirit board HTML to `index.html`
     - Create a `<div id="spirit-board">` containing five labelled zone elements: Syntax, Network, Auth, Memory, Secrets/Critical
     - Add `<div id="planchette">` as a child of the board
     - _Requirements: 4.1_
     - _Design: UI Layer §4, `ZONE_POSITIONS`_
 
-  - [ ] 3.2 Style the spirit board and planchette in `style.css`
+  - [~] 3.2 Style the spirit board and planchette in `style.css`
     - Apply Victorian brass and aged-parchment styling to the board
     - Style the planchette with a brass token appearance
     - Use `position: absolute` on the planchette so JS translate moves work
     - _Requirements: 4.1, 10.3_
     - _Design: UI Layer §4_
 
-  - [ ] 3.3 Implement `setPlanchetteZone(zone)` in `app.js` under `// --- UI ---`
+  - [~] 3.3 Implement `setPlanchetteZone(zone)` in `app.js` under `// --- UI ---`
     - Encode `ZONE_POSITIONS` constant map with the five named positions
     - Apply `transform: translate(x, y)` to the planchette element
     - _Requirements: 4.2, 4.3_
     - _Design: UI Layer §4, `setPlanchetteZone`, `ZONE_POSITIONS`_
 
-  - [ ] 3.4 Add planchette walking animation to `style.css`
+  - [~] 3.4 Add planchette walking animation to `style.css`
     - CSS keyframe `@keyframes planchette-walk` with a subtle tremble (small random-feeling translate + rotate steps)
     - Apply animation when `body[data-phase="summoning"]`
     - Add a sharp transition for the slam move (`strike` phase, short duration + ease-in)
@@ -104,13 +104,13 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
     - _Design: UI Layer §4_
 
 - [ ] 4. Implement the state machine
-  - [ ] 4.1 Define state object and `setPhase` UI helper under `// --- STATE MACHINE ---`
+  - [~] 4.1 Define state object and `setPhase` UI helper under `// --- STATE MACHINE ---`
     - Declare `let state = { phase, result, droneHandle, strikeArmed, strikeTimer, strikeFired }`
     - Implement `setPhase(phase)` that sets `data-phase` attribute on `<body>`
     - _Requirements: 5.1, 5.2, 7.5_
     - _Design: State Machine §3, state object_
 
-  - [ ] 4.2 Implement `summon(logText)` transition
+  - [~] 4.2 Implement `summon(logText)` transition
     - Guard: if already not in `idle`, return
     - Call `analyzeLog`; if null, call `showEmptyInputMessage()` and return
     - Set `state.result`, arm `strikeArmed` if `hidden !== null`
@@ -118,21 +118,21 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
     - _Requirements: 1.3, 5.1, 7.6_
     - _Design: State Machine §3, `summon` transition_
 
-  - [ ] 4.3 Implement `_tensionComplete()` transition
+  - [~] 4.3 Implement `_tensionComplete()` transition
     - Switch `phase` to `'calm'`
     - Stop drone ramp, call `setPhase('calm')`, add `.parchment-mode` to body
     - Call `showSurfaceFinding(finding, fix)` UI function
     - _Requirements: 5.2, 5.3_
     - _Design: State Machine §3, `_tensionComplete` transition_
 
-  - [ ] 4.4 Implement `copyFix()` transition
+  - [~] 4.4 Implement `copyFix()` transition
     - Copy fix text to clipboard using `navigator.clipboard.writeText`; fall back to `execCommand`; fall back to visual selection
     - Call `showCopyConfirmation()`
     - If `strikeArmed`, start 4 s timer calling `_triggerStrike`
     - _Requirements: 6.1, 6.2, 6.3, 7.1_
     - _Design: State Machine §3, `copyFix`; Error Handling §Clipboard_
 
-  - [ ] 4.5 Implement `pointerNearInput()` event-to-transition bridge
+  - [~] 4.5 Implement `pointerNearInput()` event-to-transition bridge
     - Add `pointermove` listener on the textarea / input area
     - If `strikeArmed && !strikeFired && phase === 'calm'`, call `_triggerStrike()` immediately
     - _Requirements: 7.2_
@@ -151,14 +151,14 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
     - Drive state machine to each phase programmatically; call `reset()`; assert `phase === 'idle'`, `strikeFired === false`, `strikeTimer === null`
 
 - [ ] 5. Implement the audio synthesizer
-  - [ ] 5.1 Implement `initAudio()` under `// --- AUDIO ---`
+  - [~] 5.1 Implement `initAudio()` under `// --- AUDIO ---`
     - Create `AudioContext` (with `webkitAudioContext` fallback) on first call; store in module variable
     - Create and connect `masterGain` node to `context.destination`
     - If neither API is available, set `audioDisabled = true` and return
     - _Requirements: 8.1, 8.3, 8.5_
     - _Design: Audio Synthesizer §2, `initAudio`, Error Handling §Web Audio API unavailable_
 
-  - [ ] 5.2 Implement `playDrone(durationSeconds)` and return a `DroneHandle`
+  - [~] 5.2 Implement `playDrone(durationSeconds)` and return a `DroneHandle`
     - Build two oscillators (`sine` ~40 Hz, `sawtooth` ~60 Hz)
     - Feed both through a lowpass `BiquadFilterNode` (cutoff ~200 Hz, Q 5)
     - Apply a linear gain ramp 0 → 0.6 over `durationSeconds`
@@ -166,21 +166,21 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
     - _Requirements: 5.1, 8.1, 8.2_
     - _Design: Audio Synthesizer §2, `playDrone`_
 
-  - [ ] 5.3 Implement `playSting()`
+  - [~] 5.3 Implement `playSting()`
     - Build three oscillators at dissonant intervals (~440 Hz sawtooth, ~466 Hz sawtooth, ~523 Hz square)
     - Feed through a `WaveShaperNode` with a hard-clip distortion curve
     - Attack 5 ms, exponential decay to 0.0001 over 0.4 s; auto-stop oscillators at 0.5 s
     - _Requirements: 7.3, 8.1, 8.2_
     - _Design: Audio Synthesizer §2, `playSting`_
 
-  - [ ] 5.4 Implement `stopAll()` and wire mute toggle
+  - [~] 5.4 Implement `stopAll()` and wire mute toggle
     - `stopAll()`: call `stop()` on any live `DroneHandle`, disconnect remaining nodes
     - Mute-toggle click: toggle `masterGain.gain.value` between `0` and `1`; update button label
     - _Requirements: 8.4, 9.2_
     - _Design: Audio Synthesizer §2, `stopAll`_
 
 - [ ] 6. Implement the strike and hidden-finding reveal
-  - [ ] 6.1 Implement `_triggerStrike()` transition
+  - [~] 6.1 Implement `_triggerStrike()` transition
     - Guard: `if (state.strikeFired) return;` — set `strikeFired = true` immediately
     - Clear any pending `strikeTimer`
     - Call `setPhase('strike')`, `triggerFlash()`, `playSting()`, `setPlanchetteZone('critical')`
@@ -188,35 +188,35 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
     - _Requirements: 7.3, 7.4, 7.5_
     - _Design: State Machine §3, `_triggerStrike`_
 
-  - [ ] 6.2 Implement `triggerFlash()` UI function
+  - [~] 6.2 Implement `triggerFlash()` UI function
     - Add `.invert-flash` class to `<body>`; remove it after 250 ms via `setTimeout`
     - _Requirements: 7.3_
     - _Design: UI Layer §4, `triggerFlash`_
 
-  - [ ] 6.3 Add `.invert-flash` CSS rule
+  - [~] 6.3 Add `.invert-flash` CSS rule
     - Apply `filter: invert(1)` to `body.invert-flash` for the 250 ms window
     - _Requirements: 7.3_
     - _Design: UI Layer §4_
 
-  - [ ] 6.4 Implement `showSurfaceFinding(finding, fix)` and `showHiddenFinding(finding)` UI functions
+  - [~] 6.4 Implement `showSurfaceFinding(finding, fix)` and `showHiddenFinding(finding)` UI functions
     - `showSurfaceFinding`: populate result panel with surface label, matched text, fix string, and "Copy Fix" button
     - `showHiddenFinding`: populate result panel with hidden type, severity badge, matched text (truncated to 80 chars), and remediation
     - _Requirements: 5.3, 7.4_
     - _Design: UI Layer §4, `showSurfaceFinding`, `showHiddenFinding`_
 
-  - [ ] 6.5 Implement `showCopyConfirmation()` UI function
+  - [~] 6.5 Implement `showCopyConfirmation()` UI function
     - Briefly display "Copied!" feedback near the "Copy Fix" button; auto-hide after ~1.5 s
     - _Requirements: 6.2_
     - _Design: UI Layer §4, `showCopyConfirmation`_
 
-  - [ ] 6.6 Implement `showEmptyInputMessage()` UI function
+  - [~] 6.6 Implement `showEmptyInputMessage()` UI function
     - Display an in-theme message: "The spirits find no message here…" in the result panel
     - Do not change `state.phase` (stays in `idle`)
     - _Requirements: 1.3_
     - _Design: Error Handling §empty-or-whitespace_
 
 - [ ] 7. Implement reset and wire all event handlers
-  - [ ] 7.1 Implement `reset()` transition
+  - [~] 7.1 Implement `reset()` transition
     - Clear `strikeTimer` via `clearTimeout`
     - Call `stopAll()`
     - Reset all state fields to defaults
@@ -224,7 +224,7 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
     - _Requirements: 9.1, 9.2_
     - _Design: State Machine §3, `reset` transition_
 
-  - [ ] 7.2 Wire all UI event handlers under `// --- UI ---`
+  - [~] 7.2 Wire all UI event handlers under `// --- UI ---`
     - "Summon Diagnosis" button → `initAudio()` then `summon(textarea.value)`
     - "Copy Fix" button → `copyFix()`
     - Reset button → `reset()`
@@ -234,13 +234,13 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
     - _Requirements: 1.2, 2.2, 6.1, 7.2, 8.4, 9.1_
     - _Design: UI Layer §4_
 
-  - [ ] 7.3 Checkpoint — Ensure manual smoke test passes
+  - [~] 7.3 Checkpoint — Ensure manual smoke test passes
     - Open `index.html` in a browser; paste each sample log and step through the full 3-beat loop
     - Verify parchment mode, flash, sting, planchette slam, and hidden finding all work
     - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 8. Final testing — property-based and unit tests
-  - [ ] 8.1 Create `tests/index.html` test runner
+  - [~] 8.1 Create `tests/index.html` test runner
     - Load fast-check from CDN (production files have no CDN dependency)
     - Import the testable pure functions from `app.js` (or a shared module) and run all property tests
     - _Requirements: 3.5_
@@ -259,7 +259,7 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 9.1_
     - _Design: Testing Strategy, unit tests_
 
-  - [ ] 8.4 Final checkpoint — All tests pass and app is production-ready
+  - [~] 8.4 Final checkpoint — All tests pass and app is production-ready
     - Verify static-file hosting works (open via `file://` or a local server with no config)
     - Confirm no external audio files, no build step, relative paths only
     - Ensure all tests pass, ask the user if questions arise.

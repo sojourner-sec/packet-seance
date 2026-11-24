@@ -1,0 +1,847 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SÉANCE — Victorian Spirit-Board Log Analyzer
+   style.css
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────────────────
+   GOOGLE FONT IMPORT
+   (IM Fell English is already linked in index.html; this @import is a
+   belt-and-suspenders fallback if the CSS is loaded standalone)
+   ───────────────────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=UnifrakturMaguntia&display=swap');
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CUSTOM PROPERTIES — Victorian Occult Palette
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* ── Backgrounds ─────────────────────────────────────────────────────── */
+  --bg-void:        #0a0705;   /* deep séance black */
+  --bg-chamber:     #110d08;   /* dark oak panelling */
+  --bg-board:       #1a1108;   /* spirit board surface */
+  --bg-card:        #1e150a;   /* card / panel background */
+  --bg-input:       #150f07;   /* textarea well */
+
+  /* ── Foreground / Text ───────────────────────────────────────────────── */
+  --text-primary:   #e8d5a0;   /* aged candlelight ivory */
+  --text-secondary: #b8955e;   /* warm brass */
+  --text-muted:     #7a6040;   /* dim shadow */
+  --text-warning:   #d4451a;   /* blood warning */
+
+  /* ── Accent / Brass ──────────────────────────────────────────────────── */
+  --brass-bright:   #c9922a;   /* polished brass highlight */
+  --brass-mid:      #a07020;   /* antique brass */
+  --brass-dark:     #6b4c10;   /* dark brass groove */
+  --gold-glow:      #f0c040;   /* candlelight spark */
+
+  /* ── Borders & Separators ────────────────────────────────────────────── */
+  --border-primary: #6b4c10;
+  --border-subtle:  #3a2a10;
+  --border-glow:    #a07020;
+
+  /* ── Planchette & Spirit Board ───────────────────────────────────────── */
+  --zone-label:     #c9922a;
+  --zone-bg:        rgba(201, 146, 42, 0.07);
+  --zone-hover:     rgba(201, 146, 42, 0.18);
+  --planchette-bg:  #c9922a;
+  --planchette-eye: #0a0705;
+
+  /* ── State-specific overrides (applied via data-phase) ───────────────── */
+  --phase-bg:       var(--bg-void);
+  --phase-text:     var(--text-primary);
+
+  /* ── Typography ──────────────────────────────────────────────────────── */
+  --font-serif: 'IM Fell English', Georgia, 'Times New Roman', serif;
+  --font-display: 'UnifrakturMaguntia', 'IM Fell English', Georgia, serif;
+  --font-mono: 'Courier New', Courier, monospace;
+
+  /* ── Spacing ─────────────────────────────────────────────────────────── */
+  --space-xs:  0.25rem;
+  --space-sm:  0.5rem;
+  --space-md:  1rem;
+  --space-lg:  1.75rem;
+  --space-xl:  2.5rem;
+
+  /* ── Transitions ─────────────────────────────────────────────────────── */
+  --transition-fast:   150ms ease;
+  --transition-medium: 350ms ease;
+  --transition-slow:   700ms ease;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLOBAL RESET & BASE
+   ═══════════════════════════════════════════════════════════════════════════ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--phase-text);
+  background-color: var(--phase-bg);
+  min-height: 100vh;
+  /* Aged paper grain via layered radial gradients — no image files */
+  background-image:
+    radial-gradient(ellipse at 20% 10%,  rgba(201, 146, 42, 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 90%,  rgba(201, 146, 42, 0.03) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 50%,  rgba(10,  7,   5,  0.6)  0%, transparent 100%);
+  transition:
+    background-color var(--transition-slow),
+    color            var(--transition-slow),
+    filter           var(--transition-fast);
+}
+
+/* Faint vignette overlay for a candlelit room feel */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.65) 100%);
+  z-index: 0;
+}
+
+/* Stacked-noise texture via repeating CSS pattern */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.4) 2px,
+      rgba(255, 255, 255, 0.4) 3px
+    );
+  z-index: 0;
+}
+
+/* Keep all real content above pseudo-element overlays */
+.app-header,
+.app-main,
+#mute-btn,
+#reset-btn {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PHASE OVERRIDES  (body[data-phase="…"])
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* idle — default dark séance */
+body[data-phase="idle"] {
+  --phase-bg:   var(--bg-void);
+  --phase-text: var(--text-primary);
+}
+
+/* summoning — deeper darkness, narrowed focus */
+body[data-phase="summoning"] {
+  --phase-bg:   #060402;
+  --phase-text: #c8b87a;
+  filter: brightness(0.85) saturate(0.9);
+}
+
+/* calm — still dark but slightly warmer; parchment mode will override further */
+body[data-phase="calm"] {
+  --phase-bg:   var(--bg-chamber);
+  --phase-text: var(--text-primary);
+}
+
+/* strike — blood-red dramatic reveal */
+body[data-phase="strike"] {
+  --phase-bg:   #0d0303;
+  --phase-text: #f0c0a0;
+  filter: saturate(1.3) brightness(0.95);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PARCHMENT MODE  (.parchment-mode)
+   Applied in calm phase after the tension break.
+   ═══════════════════════════════════════════════════════════════════════════ */
+body.parchment-mode {
+  --phase-bg:         #f5ead0;
+  --phase-text:       #2a1a08;
+  --bg-card:          #ede0bc;
+  --bg-input:         #f0e5c8;
+  --bg-board:         #e8d8b0;
+  --text-secondary:   #7a4e18;
+  --text-muted:       #9a7a4a;
+  --border-primary:   #c0944a;
+  --border-subtle:    #d8c08a;
+  --zone-label:       #7a4e18;
+  --zone-bg:          rgba(120, 70, 20, 0.06);
+  --planchette-bg:    #9a6020;
+  background-image:
+    /* Aged paper grain for parchment */
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      rgba(160, 120, 60, 0.04) 10px,
+      rgba(160, 120, 60, 0.04) 11px
+    ),
+    radial-gradient(ellipse at 15% 15%, rgba(200, 160, 80, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 85%, rgba(200, 160, 80, 0.10) 0%, transparent 50%);
+  filter: none;
+  transition:
+    background-color 500ms ease,
+    color            500ms ease;
+}
+
+body.parchment-mode::before {
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(140, 100, 40, 0.25) 100%);
+}
+
+body.parchment-mode::after {
+  opacity: 0.015;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TYPOGRAPHY
+   ═══════════════════════════════════════════════════════════════════════════ */
+h1, h2, h3 {
+  font-family: var(--font-serif);
+  font-weight: normal;
+  line-height: 1.25;
+}
+
+h1 { font-size: clamp(2rem, 5vw, 3.5rem); }
+h2 { font-size: clamp(1.25rem, 3vw, 1.75rem); }
+
+pre, code {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYOUT
+   ═══════════════════════════════════════════════════════════════════════════ */
+.app-header {
+  text-align: center;
+  padding: var(--space-xl) var(--space-lg) var(--space-lg);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.app-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 7vw, 5rem);
+  color: var(--brass-bright);
+  text-shadow:
+    0 0 8px  rgba(201, 146, 42, 0.6),
+    0 0 24px rgba(201, 146, 42, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.8);
+  letter-spacing: 0.05em;
+}
+
+body.parchment-mode .app-title {
+  color: var(--text-secondary);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.app-subtitle {
+  font-style: italic;
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  margin-top: var(--space-xs);
+  opacity: 0.85;
+}
+
+.app-main {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: var(--space-lg) var(--space-md) var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INPUT SECTION
+   ═══════════════════════════════════════════════════════════════════════════ */
+.input-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.input-label {
+  font-style: italic;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.log-textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: var(--space-md);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-primary);
+  border-radius: 2px;
+  resize: vertical;
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow   var(--transition-fast),
+    background-color var(--transition-medium),
+    color            var(--transition-medium);
+
+  /* Subtle inner shadow for depth */
+  box-shadow:
+    inset 0 2px 8px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(201, 146, 42, 0.05);
+}
+
+.log-textarea:focus {
+  border-color: var(--brass-bright);
+  box-shadow:
+    inset 0 2px 8px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(201, 146, 42, 0.25);
+}
+
+.log-textarea::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Empty-input warning message */
+.empty-input-msg {
+  font-style: italic;
+  color: var(--brass-mid);
+  font-size: 0.9rem;
+  padding: var(--space-sm) var(--space-md);
+  border-left: 2px solid var(--brass-mid);
+  background: rgba(201, 146, 42, 0.07);
+  border-radius: 0 2px 2px 0;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BUTTONS — base & variants
+   ═══════════════════════════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: 0.6em 1.4em;
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-style: italic;
+  cursor: pointer;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  text-decoration: none;
+  transition:
+    background-color var(--transition-fast),
+    border-color     var(--transition-fast),
+    color            var(--transition-fast),
+    box-shadow       var(--transition-fast),
+    transform        var(--transition-fast);
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+/* Primary — "Summon Diagnosis" */
+.btn--primary {
+  background: linear-gradient(180deg, var(--brass-mid) 0%, var(--brass-dark) 100%);
+  color: var(--bg-void);
+  border-color: var(--brass-bright);
+  font-size: 1.05rem;
+  letter-spacing: 0.03em;
+  padding: 0.65em 2em;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 220, 100, 0.25);
+  align-self: flex-start;
+}
+
+.btn--primary:hover {
+  background: linear-gradient(180deg, var(--brass-bright) 0%, var(--brass-mid) 100%);
+  box-shadow:
+    0 4px 14px rgba(201, 146, 42, 0.45),
+    inset 0 1px 0 rgba(255, 220, 100, 0.35);
+}
+
+/* Sample buttons */
+.btn--sample {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border-primary);
+  font-size: 0.9rem;
+  padding: 0.45em 1em;
+}
+
+.btn--sample:hover {
+  background: rgba(201, 146, 42, 0.12);
+  border-color: var(--brass-mid);
+  color: var(--text-primary);
+}
+
+.btn--sample .sample-hint {
+  font-size: 0.75rem;
+  font-style: normal;
+  opacity: 0.65;
+}
+
+/* Copy Fix button */
+.btn--copy {
+  background: transparent;
+  color: var(--brass-bright);
+  border-color: var(--brass-mid);
+  font-size: 0.95rem;
+}
+
+.btn--copy:hover {
+  background: rgba(201, 146, 42, 0.14);
+  border-color: var(--brass-bright);
+}
+
+/* Utility buttons (mute, reset) — fixed to corners */
+.btn--utility {
+  background: rgba(10, 7, 5, 0.75);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-primary);
+  font-size: 0.85rem;
+  padding: 0.45em 0.9em;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.btn--utility:hover {
+  background: rgba(26, 17, 8, 0.9);
+  border-color: var(--brass-mid);
+  color: var(--text-primary);
+}
+
+/* Fixed corner placements */
+.btn--mute {
+  position: fixed;
+  top: var(--space-md);
+  right: var(--space-md);
+  z-index: 100;
+}
+
+.btn--reset {
+  position: fixed;
+  bottom: var(--space-md);
+  right: var(--space-md);
+  z-index: 100;
+}
+
+/* Parchment-mode utility buttons need readable contrast */
+body.parchment-mode .btn--utility {
+  background: rgba(245, 234, 208, 0.85);
+  color: var(--text-secondary);
+  border-color: var(--border-primary);
+}
+
+body.parchment-mode .btn--utility:hover {
+  background: rgba(237, 224, 188, 0.95);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SAMPLE BUTTONS ROW
+   ═══════════════════════════════════════════════════════════════════════════ */
+.samples-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.samples-label {
+  font-style: italic;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.samples-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SPIRIT BOARD SECTION
+   ═══════════════════════════════════════════════════════════════════════════ */
+.board-section {
+  display: flex;
+  justify-content: center;
+}
+
+#spirit-board {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 4 / 2.5;
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(201, 146, 42, 0.08) 0%, transparent 70%),
+    var(--bg-board);
+  border: 2px solid var(--border-primary);
+  border-radius: 4px;
+  box-shadow:
+    0 0 0 4px var(--border-subtle),
+    0 0 0 6px var(--border-primary),
+    0 8px 32px rgba(0, 0, 0, 0.7),
+    inset 0 0 60px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+
+  /* Engraved wood grain via repeating gradient */
+  background-image:
+    repeating-linear-gradient(
+      88deg,
+      transparent 0px,
+      transparent 18px,
+      rgba(201, 146, 42, 0.025) 18px,
+      rgba(201, 146, 42, 0.025) 19px
+    ),
+    radial-gradient(ellipse at 50% 20%, rgba(201, 146, 42, 0.08) 0%, transparent 70%),
+    linear-gradient(180deg, #1e1508 0%, #140e06 50%, #1e1508 100%);
+}
+
+/* Zone labels */
+.board-zone {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: clamp(0.6rem, 1.5vw, 0.8rem);
+  font-style: italic;
+  color: var(--zone-label);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--zone-bg);
+  border: 1px solid rgba(201, 146, 42, 0.2);
+  border-radius: 2px;
+  padding: 0.3em 0.6em;
+  text-shadow: 0 0 6px rgba(201, 146, 42, 0.5);
+  transition: background var(--transition-medium), border-color var(--transition-medium);
+  user-select: none;
+}
+
+.board-zone--active {
+  background: var(--zone-hover);
+  border-color: var(--brass-mid);
+  box-shadow: 0 0 10px rgba(201, 146, 42, 0.3);
+}
+
+/* Critical zone is larger and centered lower */
+.board-zone--critical {
+  font-size: clamp(0.65rem, 1.6vw, 0.85rem);
+  letter-spacing: 0.1em;
+  border-color: rgba(180, 40, 20, 0.4);
+  color: #c06040;
+  text-shadow: 0 0 8px rgba(200, 60, 20, 0.5);
+}
+
+/* Planchette */
+#planchette {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  background: radial-gradient(circle at 35% 35%, #e0aa50 0%, var(--planchette-bg) 55%, #704010 100%);
+  border-radius: 50% 50% 50% 10% / 50% 50% 35% 50%;
+  border: 2px solid #e8c060;
+  box-shadow:
+    0 0 12px rgba(201, 146, 42, 0.5),
+    0 4px 12px rgba(0, 0, 0, 0.6),
+    inset 0 1px 2px rgba(255, 220, 100, 0.4);
+  transform: translate(-50%, -50%);
+  transition: transform 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  cursor: default;
+  z-index: 10;
+  /* Centre-hole "eye" via box-shadow ring */
+}
+
+#planchette::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--planchette-eye);
+  border: 1px solid rgba(201, 146, 42, 0.4);
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.9);
+}
+
+/* Planchette walking animation (summoning phase) */
+@keyframes planchette-walk {
+  0%   { transform: translate(-50%, -50%) rotate(0deg)   translateX(0px);   }
+  10%  { transform: translate(-50%, -50%) rotate(1.5deg) translateX(2px);   }
+  20%  { transform: translate(-50%, -50%) rotate(-1deg)  translateX(-1px);  }
+  30%  { transform: translate(-50%, -50%) rotate(2deg)   translateX(1px);   }
+  40%  { transform: translate(-50%, -50%) rotate(-0.5deg) translateX(-2px); }
+  50%  { transform: translate(-50%, -50%) rotate(1deg)   translateX(0px);   }
+  60%  { transform: translate(-50%, -50%) rotate(-2deg)  translateX(2px);   }
+  70%  { transform: translate(-50%, -50%) rotate(0.5deg) translateX(-1px);  }
+  80%  { transform: translate(-50%, -50%) rotate(-1.5deg) translateX(1px);  }
+  90%  { transform: translate(-50%, -50%) rotate(1deg)   translateX(-2px);  }
+  100% { transform: translate(-50%, -50%) rotate(0deg)   translateX(0px);   }
+}
+
+body[data-phase="summoning"] #planchette {
+  animation: planchette-walk 1.6s ease-in-out infinite;
+}
+
+/* Strike slam — fast, dramatic */
+body[data-phase="strike"] #planchette {
+  animation: none;
+  transition: transform 180ms cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  box-shadow:
+    0 0 20px rgba(220, 60, 20, 0.7),
+    0 4px 12px rgba(0, 0, 0, 0.8),
+    inset 0 1px 2px rgba(255, 100, 60, 0.4);
+  background: radial-gradient(circle at 35% 35%, #e06040 0%, #a03020 55%, #600010 100%);
+  border-color: #d04020;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESULT PANEL
+   ═══════════════════════════════════════════════════════════════════════════ */
+#result-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* Shared finding card */
+.finding {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: 2px;
+  padding: var(--space-lg);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(201, 146, 42, 0.1);
+}
+
+.finding-title {
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--brass-bright);
+  margin-bottom: var(--space-md);
+  font-size: 1.3rem;
+}
+
+.finding-title--warning {
+  color: var(--text-warning);
+  text-shadow: 0 0 10px rgba(212, 69, 26, 0.5);
+}
+
+.finding-label {
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  margin-bottom: var(--space-sm);
+}
+
+.finding-match {
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--brass-mid);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: 0 2px 2px 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin-bottom: var(--space-md);
+}
+
+.finding-match--danger {
+  border-left-color: var(--text-warning);
+  color: #e09070;
+}
+
+.finding-fix,
+.finding-remediation {
+  font-style: italic;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.finding-remediation {
+  color: #d08060;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+/* Severity badge */
+.severity-badge {
+  display: inline-block;
+  padding: 0.2em 0.7em;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-family: var(--font-mono);
+  letter-spacing: 0.1em;
+  background: rgba(180, 40, 20, 0.2);
+  color: #e06040;
+  border: 1px solid rgba(180, 40, 20, 0.5);
+  border-radius: 2px;
+  margin-bottom: var(--space-sm);
+  vertical-align: middle;
+}
+
+/* Copy row */
+.copy-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+.copy-confirm {
+  font-style: italic;
+  font-size: 0.875rem;
+  color: #80c060;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.copy-confirm:not([hidden]) {
+  opacity: 1;
+}
+
+/* Hidden finding card — dramatic dark */
+.finding--hidden {
+  border-color: rgba(180, 40, 20, 0.6);
+  background: #150505;
+  box-shadow:
+    0 4px 24px rgba(180, 40, 20, 0.2),
+    inset 0 1px 0 rgba(220, 60, 20, 0.1);
+}
+
+body.parchment-mode .finding--hidden {
+  background: #f5e0d8;
+  border-color: rgba(180, 40, 20, 0.5);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SUMMONING PHASE — additional atmospheric effects
+   ═══════════════════════════════════════════════════════════════════════════ */
+body[data-phase="summoning"] .input-section,
+body[data-phase="summoning"] .samples-section {
+  opacity: 0.4;
+  pointer-events: none;
+  transition: opacity var(--transition-slow);
+}
+
+body[data-phase="summoning"] #spirit-board {
+  box-shadow:
+    0 0 0 4px var(--border-subtle),
+    0 0 0 6px var(--border-primary),
+    0 0 40px rgba(201, 146, 42, 0.25),
+    0 8px 32px rgba(0, 0, 0, 0.9),
+    inset 0 0 60px rgba(0, 0, 0, 0.4);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STRIKE PHASE — inversion flash
+   ═══════════════════════════════════════════════════════════════════════════ */
+body.invert-flash {
+  filter: invert(1);
+  transition: filter 0ms; /* instant on, JS removes class after 250ms */
+}
+
+body[data-phase="strike"] .finding--surface {
+  opacity: 0.5;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCROLLBARS — Webkit custom styling for atmosphere
+   ═══════════════════════════════════════════════════════════════════════════ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-chamber);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--brass-dark);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--brass-mid);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FOCUS STYLES — accessibility
+   ═══════════════════════════════════════════════════════════════════════════ */
+:focus-visible {
+  outline: 2px solid var(--brass-bright);
+  outline-offset: 2px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE — laptop viewport baseline (1280 × 800)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 680px) {
+  .app-main {
+    padding: var(--space-md) var(--space-sm) var(--space-lg);
+    gap: var(--space-lg);
+  }
+
+  .btn--primary {
+    width: 100%;
+    text-align: center;
+  }
+
+  .samples-row {
+    flex-direction: column;
+  }
+
+  .btn--mute {
+    top: var(--space-sm);
+    right: var(--space-sm);
+  }
+
+  .btn--reset {
+    bottom: var(--space-sm);
+    right: var(--space-sm);
+  }
+}
