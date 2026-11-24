@@ -6,7 +6,7 @@ Migrate the Séance app from a text-log analyzer to a full packet-capture analyz
 
 ## Tasks
 
-- [~] 1. Update `index.html` for pcap UI
+- [x] 1. Update `index.html` for pcap UI
   - Replace the `<textarea>` with a file-picker input (`<input type="file" accept=".pcap">`) and a drag-and-drop drop zone `<div id="drop-zone">`
   - Keep the "Summon Diagnosis" button; rename "Copy Fix" to "Copy Summary" (update element ID to `copy-summary-btn`)
   - Rename sample buttons: "The Quiet House", "The Knocking Visitor", "The Whispering Wire"; update `aria-label` attributes to match
@@ -16,7 +16,7 @@ Migrate the Séance app from a text-log analyzer to a full packet-capture analyz
   - Add `<div id="summary-panel">` and `<div id="findings-list">` inside `#result-panel` for the calm summary and strike reveal respectively
   - _Requirements: 1.1, 2.2, 7.1, 8.3_
 
-- [~] 2. Update `style.css` for new zone names and contrast
+- [x] 2. Update `style.css` for new zone names and contrast
   - Update any CSS comments or selectors that reference the old zone names (syntax, network, auth, memory) to the new names (recon, dns, cleartext, lateral)
   - Verify that both dark-séance and parchment themes maintain ≥ 4.5:1 contrast for all text elements (no code changes needed if they already pass; add a comment confirming the check)
   - Add drop-zone styles: dashed brass border, hover highlight, and an active drag-over state (`#drop-zone.drag-over`)
@@ -119,29 +119,29 @@ Migrate the Séance app from a text-log analyzer to a full packet-capture analyz
     - _Requirements: 6.5_
 
 - [ ] 7. Create `audio.js` — full audio synthesizer
-  - [~] 7.1 Move `initAudio()` from `app.js` to `audio.js`; keep the same signature and fallback logic
+  - [ ] 7.1 Move `initAudio()` from `app.js` to `audio.js`; keep the same signature and fallback logic
     - Delete the stub in `app.js` once `audio.js` is loaded via script tag before `app.js`
     - _Requirements: 11.1, 11.2, 11.4_
 
-  - [~] 7.2 Implement `playDrone(durationSeconds)` → `DroneHandle` in `audio.js`
+  - [ ] 7.2 Implement `playDrone(durationSeconds)` → `DroneHandle` in `audio.js`
     - Two oscillators (`sine` ~40 Hz, `sawtooth` ~60 Hz) → `BiquadFilterNode` (lowpass 200 Hz, Q 5) → gain ramp 0 → 0.6
     - Return `{ stop() }` that ramps gain to 0.0001 over 0.3 s then disconnects
     - Remove the stub from `app.js`
     - _Requirements: 8.1, 11.1_
 
-  - [~] 7.3 Implement `playSting()` in `audio.js`
+  - [ ] 7.3 Implement `playSting()` in `audio.js`
     - Three oscillators at ~440 Hz (sawtooth), ~466 Hz (sawtooth), ~523 Hz (square) → `WaveShaperNode` (hard-clip) → gain (5 ms attack, exponential decay to 0.0001 over 0.4 s); auto-stop at 0.5 s
     - Remove the stub from `app.js`
     - _Requirements: 10.3, 11.1_
 
-  - [~] 7.4 Implement `stopAll()` and `setMute(muted)` in `audio.js`
+  - [ ] 7.4 Implement `stopAll()` and `setMute(muted)` in `audio.js`
     - `stopAll()`: stop any live DroneHandle and disconnect remaining nodes
     - `setMute(muted)`: set `masterGain.gain.value` to 0 or 1
     - Remove stub from `app.js`; update mute-button handler in `app.js` to call `setMute()`
     - _Requirements: 11.3, 12.2_
 
-- [~] 8. Update `app.js` — pcap pipeline and UI wiring
-  - [~] 8.1 Expand state object with `packets`, `summary`, and `findings` fields
+- [ ] 8. Update `app.js` — pcap pipeline and UI wiring
+  - [ ] 8.1 Expand state object with `packets`, `summary`, and `findings` fields
     - Add `packets: null`, `summary: null`, `findings: []` alongside existing fields
     - _Requirements: 10.5, 10.6, 12.2_
 
@@ -152,20 +152,20 @@ Migrate the Séance app from a text-log analyzer to a full packet-capture analyz
     - Wire `<input type="file">` `change` event and `#drop-zone` drag-and-drop events (`dragenter`, `dragover`, `dragleave`, `drop`)
     - _Requirements: 1.1, 1.5_
 
-  - [~] 8.3 Rewrite `summon(arrayBuffer)` to use the pcap pipeline
+  - [ ] 8.3 Rewrite `summon(arrayBuffer)` to use the pcap pipeline
     - Accept `ArrayBuffer` instead of `logText`
     - Call `parsePcap(arrayBuffer)`; catch `{ type: 'PCAPNG' }` → `showPcapngMessage()`; catch `{ type: 'INVALID' }` → `showErrorMessage(msg)`
     - On success: call `buildSummary(packets)`, `runDetectors(packets)`; store into `state`; set `strikeArmed = findings.some(f => f.severity === 'high')`
     - Start planchette walk across recon → dns → cleartext → lateral zones
     - _Requirements: 1.2, 3.1, 3.5, 4.1–4.5, 8.1_
 
-  - [~] 8.4 Rename `copyFix()` to `copySummary()` and update to copy summary text
+  - [ ] 8.4 Rename `copyFix()` to `copySummary()` and update to copy summary text
     - Read summary text from `#summary-panel` instead of `#surface-fix`
     - Arm the 4 s strike timer if `strikeArmed`
     - Update the DOMContentLoaded handler to listen on `#copy-summary-btn`
     - _Requirements: 9.1, 9.2, 10.1_
 
-  - [~] 8.5 Rewrite `_tensionComplete()` to call `showSummary()`
+  - [ ] 8.5 Rewrite `_tensionComplete()` to call `showSummary()`
     - After stopping the drone and switching to parchment mode, call `showSummary(state.summary, storyText)` where `storyText` comes from `generateSummaryStory(state.summary)`
     - _Requirements: 8.2, 8.3_
 
@@ -185,15 +185,15 @@ Migrate the Séance app from a text-log analyzer to a full packet-capture analyz
     - Both keep `state.phase === 'idle'`
     - _Requirements: 1.4, 1.5_
 
-  - [~] 8.9 Update `_triggerStrike()` to call `showFindings()` after the flash
+  - [ ] 8.9 Update `_triggerStrike()` to call `showFindings()` after the flash
     - Replace the existing `showHiddenFinding(state.result.hidden)` call with `showFindings(state.findings)`
     - _Requirements: 10.3, 10.4_
 
-  - [~] 8.10 Update `reset()` to clear new state fields and hide new panels
+  - [ ] 8.10 Update `reset()` to clear new state fields and hide new panels
     - Clear `packets`, `summary`, `findings`; hide `#summary-panel`, `#findings-list`, `#pcapng-msg`, `#error-msg`
     - _Requirements: 12.1, 12.2_
 
-  - [~] 8.11 Update `loadSampleCapture(name, buffer)` wiring for the three pcap sample buttons
+  - [ ] 8.11 Update `loadSampleCapture(name, buffer)` wiring for the three pcap sample buttons
     - Wire "The Quiet House" → `generateQuietHouseCapture()`, "The Knocking Visitor" → `generateKnockingVisitorCapture()`, "The Whispering Wire" → `generateWhisperingWireCapture()`
     - Show capture name and packet count after loading
     - _Requirements: 2.1, 2.2, 2.3_

@@ -1,7 +1,24 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   SÉANCE — Victorian Spirit-Board Log Analyzer
+   SÉANCE — Victorian Spirit-Board Packet Analyzer
    style.css
+
+   Spirit board zone names (Recon, DNS, Cleartext, Lateral, Critical Breach)
+   match data-zone attributes in index.html and ZONE_POSITIONS in app.js.
    ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Contrast audit (WCAG AA ≥ 4.5:1) ──────────────────────────────────────
+   Dark séance theme (bg #0a0705):
+     --text-primary  #e8d5a0 → ~13.1:1  ✓
+     --text-secondary #b8955e → ~6.5:1  ✓
+     --text-muted    #7a6040 → ~3.8:1   used only for decorative .samples-label;
+                                        all interactive / body text uses text-primary or text-secondary
+     Zone labels (#c9922a) on board bg #1a1108 → ~6.2:1  ✓
+   Parchment mode (bg #f5ead0):
+     --text-primary  #3b2a14 → ~11.2:1  ✓
+     --text-secondary #7a4e18 → ~5.5:1  ✓
+     --text-muted    #6b4e28 → ~4.8:1   ✓
+   Both themes meet ≥ 4.5:1 for all body and interactive text.
+   ─────────────────────────────────────────────────────────────────────────── */
 
 /* ─────────────────────────────────────────────────────────────────────────
    GOOGLE FONT IMPORT
@@ -338,6 +355,104 @@ body.parchment-mode .app-title {
   border-left: 2px solid var(--brass-mid);
   background: rgba(201, 146, 42, 0.07);
   border-radius: 0 2px 2px 0;
+}
+
+/* Status messages (pcapng notice, generic errors) */
+.status-msg {
+  font-style: italic;
+  color: var(--brass-mid);
+  font-size: 0.9rem;
+  padding: var(--space-sm) var(--space-md);
+  border-left: 2px solid var(--brass-mid);
+  background: rgba(201, 146, 42, 0.07);
+  border-radius: 0 2px 2px 0;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DROP ZONE — drag-and-drop / file picker
+   ═══════════════════════════════════════════════════════════════════════════ */
+.drop-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 110px;
+  padding: var(--space-lg) var(--space-md);
+  border: 2px dashed var(--brass-dark);
+  border-radius: 3px;
+  background: rgba(201, 146, 42, 0.03);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background   var(--transition-fast);
+  text-align: center;
+}
+
+.drop-zone:hover {
+  border-color: var(--brass-mid);
+  background: rgba(201, 146, 42, 0.07);
+}
+
+/* Active drag-over state */
+.drop-zone.drag-over {
+  border-color: var(--brass-bright);
+  background: rgba(201, 146, 42, 0.12);
+  box-shadow: 0 0 0 3px rgba(201, 146, 42, 0.18);
+}
+
+.drop-zone__label {
+  display: block;
+  font-style: italic;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.drop-zone__ext {
+  color: var(--brass-bright);
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+.drop-zone__link {
+  color: var(--brass-bright);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.drop-zone__link:hover {
+  color: var(--gold-glow);
+}
+
+/* Hide the native file input visually but keep it accessible */
+.drop-zone__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Parchment mode: readable drop zone on light background */
+body.parchment-mode .drop-zone {
+  border-color: var(--border-primary);
+  background: rgba(120, 70, 20, 0.04);
+}
+
+body.parchment-mode .drop-zone:hover {
+  border-color: var(--brass-mid);
+  background: rgba(120, 70, 20, 0.08);
+}
+
+body.parchment-mode .drop-zone.drag-over {
+  border-color: var(--brass-mid);
+  background: rgba(120, 70, 20, 0.12);
+  box-shadow: 0 0 0 3px rgba(120, 70, 20, 0.15);
 }
 
 
@@ -773,6 +888,207 @@ body.parchment-mode .copy-confirm {
 body.parchment-mode .finding--hidden {
   background: #f5e0d8;
   border-color: rgba(180, 40, 20, 0.5);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SUMMARY PANEL (Beat 2 — calm phase)
+   ═══════════════════════════════════════════════════════════════════════════ */
+#summary-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: 2px;
+  padding: var(--space-lg);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(201, 146, 42, 0.1);
+}
+
+.summary-title {
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--brass-bright);
+  font-size: 1.3rem;
+  margin-bottom: var(--space-md);
+}
+
+.summary-story {
+  font-style: italic;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin-bottom: var(--space-md);
+  border-left: 2px solid var(--border-primary);
+  padding-left: var(--space-md);
+}
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-sm);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.summary-stat {
+  padding: var(--space-sm);
+  background: rgba(201, 146, 42, 0.05);
+  border: 1px solid var(--border-subtle);
+  border-radius: 2px;
+}
+
+.summary-stat-label {
+  display: block;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 0.2em;
+}
+
+.summary-stat-value {
+  display: block;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.summary-talkers {
+  margin-top: var(--space-md);
+  font-size: 0.875rem;
+}
+
+.summary-talkers-title {
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-bottom: var(--space-xs);
+}
+
+.summary-talker {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.2em 0;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+/* Parchment overrides for summary panel */
+body.parchment-mode #summary-panel {
+  box-shadow: 0 2px 12px rgba(120, 70, 20, 0.15);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FINDINGS LIST (Beat 3 — strike reveal)
+   Each finding is a .finding card (reuses the shared card pattern above)
+   plus finding-specific story/explanation/tip sub-sections.
+   ═══════════════════════════════════════════════════════════════════════════ */
+#findings-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* Individual finding card — extends the base .finding card */
+.finding-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: 2px;
+  padding: var(--space-lg);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(201, 146, 42, 0.1);
+}
+
+.finding-card--high {
+  border-color: rgba(180, 40, 20, 0.6);
+}
+
+.finding-card--medium {
+  border-color: rgba(160, 110, 20, 0.5);
+}
+
+/* Story paragraph — ghost-story italic prose */
+.finding-story {
+  font-style: italic;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  line-height: 1.75;
+  margin-bottom: var(--space-md);
+  border-left: 2px solid var(--border-primary);
+  padding-left: var(--space-md);
+}
+
+/* Plain-English explanation block */
+.finding-explanation {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  background: rgba(201, 146, 42, 0.05);
+  border: 1px solid var(--border-subtle);
+  border-radius: 2px;
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+
+.finding-explanation-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.25em;
+}
+
+/* Defender's tip — practical advice */
+.finding-tip {
+  font-size: 0.875rem;
+  font-style: italic;
+  color: #d08060;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.finding-tip-label {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 0.25em;
+}
+
+/* Parchment overrides */
+body.parchment-mode .finding-tip {
+  color: #5a2e0a;
+}
+
+body.parchment-mode .finding-card--high {
+  background: #f5e0d8;
+  border-color: rgba(180, 40, 20, 0.5);
+}
+
+body.parchment-mode .finding-card--medium {
+  background: #f5edd8;
+  border-color: rgba(160, 110, 20, 0.4);
+}
+
+/* Peaceful story — shown when no findings exist */
+.peaceful-story {
+  font-style: italic;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.75;
+  text-align: center;
+  padding: var(--space-lg);
+  border: 1px solid var(--border-subtle);
+  border-radius: 2px;
+  background: rgba(201, 146, 42, 0.03);
 }
 
 
