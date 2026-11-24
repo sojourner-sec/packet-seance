@@ -211,6 +211,39 @@ function analyzeLog(logText) {
 // --- UI ---
 
 /**
+ * ZONE_POSITIONS
+ * Maps each named spirit-board zone to a percentage-based (x, y) coordinate.
+ * These values are used as CSS `transform: translate(x, y)` on #planchette,
+ * which is absolutely positioned inside the relatively-positioned #spirit-board.
+ * The translate moves the planchette's centre-point to the zone's focal point.
+ */
+const ZONE_POSITIONS = {
+  syntax:   { x: '15%', y: '30%' },
+  network:  { x: '35%', y: '55%' },
+  auth:     { x: '55%', y: '30%' },
+  memory:   { x: '75%', y: '55%' },
+  critical: { x: '45%', y: '75%' },
+};
+
+/**
+ * setPlanchetteZone(zone)
+ * Moves the planchette to the named zone by setting its CSS transform.
+ * Falls back silently when the zone name is unrecognised or the element is absent.
+ *
+ * @param {string} zone - One of: 'syntax', 'network', 'auth', 'memory', 'critical'
+ */
+function setPlanchetteZone(zone) {
+  const planchette = document.getElementById('planchette');
+  if (!planchette) return;
+
+  const pos = ZONE_POSITIONS[zone];
+  if (!pos) return;
+
+  planchette.style.left = pos.x;
+  planchette.style.top  = pos.y;
+}
+
+/**
  * fillTextarea(sampleText)
  * Sets the value of #log-input to the provided sample text and focuses the textarea.
  *

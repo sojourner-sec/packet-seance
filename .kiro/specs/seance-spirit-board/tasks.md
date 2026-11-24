@@ -76,7 +76,7 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
     - **Validates: Requirements 1.3**
     - Use fast-check; generate strings of only `\s` characters; call `analyzeLog`; assert it returns `null`
 
-- [ ] 3. Build the spirit board and planchette
+- [x] 3. Build the spirit board and planchette
   - [~] 3.1 Add spirit board HTML to `index.html`
     - Create a `<div id="spirit-board">` containing five labelled zone elements: Syntax, Network, Auth, Memory, Secrets/Critical
     - Add `<div id="planchette">` as a child of the board

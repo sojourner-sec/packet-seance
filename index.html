@@ -74,8 +74,36 @@
          SPIRIT BOARD — populated by task 3.1
     ───────────────────────────────────────────────────────── -->
     <section class="board-section" aria-label="Spirit Board">
-      <div id="spirit-board">
-        <!-- Spirit board zones and planchette added in task 3.1 -->
+      <div id="spirit-board" role="img" aria-label="Victorian spirit board with five zones">
+
+        <!-- Zone: Syntax — top-left -->
+        <div class="board-zone" data-zone="syntax"
+             style="left: 10%; top: 18%; width: 16%; height: 22%"
+             aria-label="Syntax zone">Syntax</div>
+
+        <!-- Zone: Network — mid-left -->
+        <div class="board-zone" data-zone="network"
+             style="left: 28%; top: 42%; width: 16%; height: 22%"
+             aria-label="Network zone">Network</div>
+
+        <!-- Zone: Auth — top-right -->
+        <div class="board-zone" data-zone="auth"
+             style="left: 46%; top: 18%; width: 16%; height: 22%"
+             aria-label="Auth zone">Auth</div>
+
+        <!-- Zone: Memory — mid-right -->
+        <div class="board-zone" data-zone="memory"
+             style="left: 64%; top: 42%; width: 16%; height: 22%"
+             aria-label="Memory zone">Memory</div>
+
+        <!-- Zone: Secrets / Critical — bottom-centre, larger -->
+        <div class="board-zone board-zone--critical" data-zone="critical"
+             style="left: 32%; top: 64%; width: 24%; height: 24%"
+             aria-label="Critical breach zone">Secrets&nbsp;/&nbsp;Critical</div>
+
+        <!-- Planchette — moved by setPlanchetteZone() via transform: translate(x, y) -->
+        <div id="planchette" aria-hidden="true"></div>
+
       </div>
     </section>
 
