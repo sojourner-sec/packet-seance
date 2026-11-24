@@ -90,7 +90,7 @@ Build the complete single-page Séance app in three flat files (`index.html`, `s
     - _Requirements: 4.1, 10.3_
     - _Design: UI Layer §4_
 
-  - [~] 3.3 Implement `setPlanchetteZone(zone)` in `app.js` under `// --- UI ---`
+  - [x] 3.3 Implement `setPlanchetteZone(zone)` in `app.js` under `// --- UI ---`
     - Encode `ZONE_POSITIONS` constant map with the five named positions
     - Apply `transform: translate(x, y)` to the planchette element
     - _Requirements: 4.2, 4.3_

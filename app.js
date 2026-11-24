@@ -239,8 +239,9 @@ function setPlanchetteZone(zone) {
   const pos = ZONE_POSITIONS[zone];
   if (!pos) return;
 
-  planchette.style.left = pos.x;
-  planchette.style.top  = pos.y;
+  planchette.style.left = '';
+  planchette.style.top  = '';
+  planchette.style.transform = `translate(calc(${pos.x} - 50%), calc(${pos.y} - 50%))`;
 }
 
 /**
