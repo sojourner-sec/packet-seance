@@ -364,6 +364,388 @@
         "chatSessionId": "sess_32264798-619c-4072-a289-5d1d9f2baf7f",
         "timestamp": 1795533608117
       }
+    ],
+    "3.1 Implement `generateQuietHouseCapture()` → `ArrayBuffer`": [
+      {
+        "executionId": "cf0bb8fc-e2d3-4037-b16a-ac224ad17e5d",
+        "chatSessionId": "sess_77825184-a849-4e93-9b1d-53d5ae55c69e",
+        "timestamp": 1795533851781
+      },
+      {
+        "executionId": "cf0bb8fc-e2d3-4037-b16a-ac224ad17e5d",
+        "chatSessionId": "sess_77825184-a849-4e93-9b1d-53d5ae55c69e",
+        "timestamp": 1795533956863
+      }
+    ],
+    "3.2 Implement `generateKnockingVisitorCapture()` → `ArrayBuffer`": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628098889
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628109789
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628251742
+      }
+    ],
+    "3.3 Implement `generateWhisperingWireCapture()` → `ArrayBuffer`": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628099893
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628112616
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628254616
+      }
+    ],
+    "4.1 Implement `parsePcap(arrayBuffer)` file-header reader": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628100070
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628258106
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628695199
+      }
+    ],
+    "4.3 Implement `decodePacket(rawBytes, linkType, tsSeconds, tsNanoseconds)`": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628100163
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628263512
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628644458
+      }
+    ],
+    "4.4 Implement `buildSummary(packets)`": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628100244
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628701242
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628723885
+      }
+    ],
+    "5.1 Define `THRESHOLDS` config object with all six threshold constants from the design": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628100321
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628734749
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628751441
+      }
+    ],
+    "5.2 Implement `detectPortScan(packets)` → `Finding | null`": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628100450
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628755078
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628814475
+      }
+    ],
+    "5.4 Implement `detectPingSweep(packets)` → `Finding | null`": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628100530
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628758099
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628817715
+      }
+    ],
+    "5.5 Implement `detectSuspiciousDns(packets)` → `Finding | null`": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628100611
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628761375
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628820835
+      }
+    ],
+    "5.6 Implement `detectCleartextCredentials(packets)` → `Finding | null`": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628100688
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628765248
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628824212
+      }
+    ],
+    "5.8 Implement `detectArpSpoofing(packets)` → `Finding | null`": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628100772
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628768700
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628827442
+      }
+    ],
+    "5.10 Implement `runDetectors(packets)` → `Finding[]`": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628100847
+      },
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795629141708
+      },
+      {
+        "executionId": "83a4ee96-dabc-4e91-81d0-f4a122129ffa",
+        "chatSessionId": "sess_b8c4c9cc-3b33-4cc1-aac7-6938e5e29368",
+        "timestamp": 1795629336656
+      },
+      {
+        "executionId": "83a4ee96-dabc-4e91-81d0-f4a122129ffa",
+        "chatSessionId": "sess_b8c4c9cc-3b33-4cc1-aac7-6938e5e29368",
+        "timestamp": 1795629398774
+      }
+    ],
+    "6.1 Implement `generateSummaryStory(summary)` → `string`": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628100921
+      }
+    ],
+    "6.2 Implement `generateFindingStory(finding)` → `{ story, explanation, tip }`": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628100997
+      }
+    ],
+    "6.4 Implement `generatePeacefulStory(summary)` → `string`": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628101070
+      }
+    ],
+    "7.1 Move `initAudio()` from `app.js` to `audio.js`; keep the same signature and fallback logic": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628101138
+      }
+    ],
+    "7.2 Implement `playDrone(durationSeconds)` → `DroneHandle` in `audio.js`": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628101213
+      }
+    ],
+    "7.3 Implement `playSting()` in `audio.js`": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628101286
+      }
+    ],
+    "7.4 Implement `stopAll()` and `setMute(muted)` in `audio.js`": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628101363
+      }
+    ],
+    "8.1 Expand state object with `packets`, `summary`, and `findings` fields": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628101471
+      }
+    ],
+    "8.2 Implement file-load entry point: `FileReader` + File API": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628101555
+      }
+    ],
+    "8.3 Rewrite `summon(arrayBuffer)` to use the pcap pipeline": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628101632
+      }
+    ],
+    "8.4 Rename `copyFix()` to `copySummary()` and update to copy summary text": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628101734
+      }
+    ],
+    "8.5 Rewrite `_tensionComplete()` to call `showSummary()`": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628101832
+      }
+    ],
+    "8.6 Implement `showSummary(summary, storyText)` UI function": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628101913
+      }
+    ],
+    "8.7 Implement `showFindings(findings)` UI function for the strike reveal": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628101995
+      }
+    ],
+    "8.8 Implement `showPcapngMessage()` and `showErrorMessage(msg)` UI functions": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628102116
+      }
+    ],
+    "8.9 Update `_triggerStrike()` to call `showFindings()` after the flash": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628102235
+      }
+    ],
+    "8.10 Update `reset()` to clear new state fields and hide new panels": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628102320
+      }
+    ],
+    "8.11 Update `loadSampleCapture(name, buffer)` wiring for the three pcap sample buttons": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628102404
+      }
+    ],
+    "9. Checkpoint — Smoke test the full 3-beat loop": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628102481
+      }
+    ],
+    "11. Final checkpoint — All tests pass and app is production-ready": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628102572
+      }
+    ],
+    "3. Create `samples.js` — three synthetic pcap generators": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628254693
+      }
+    ],
+    "4. Create `pcap.js` — packet parser": [
+      {
+        "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
+        "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
+        "timestamp": 1795628724014
+      }
+    ],
+    "5. Create `detectors.js` — detection rules": [
+      {
+        "executionId": "83a4ee96-dabc-4e91-81d0-f4a122129ffa",
+        "chatSessionId": "sess_b8c4c9cc-3b33-4cc1-aac7-6938e5e29368",
+        "timestamp": 1795629398988
+      }
     ]
   }
 }
