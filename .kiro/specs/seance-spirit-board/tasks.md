@@ -100,12 +100,12 @@ Migrate the Séance app from a text-log analyzer to a full packet-capture analyz
     - **Property 8: Finding shape is complete** — for any non-null finding from any detector, `type`, `severity`, `hosts`, `evidence`, and `packetCount` are all present and non-empty/non-zero
     - **Validates: Requirements 4.6**
 
-- [ ] 6. Create `story.js` — narrative templates
-  - [~] 6.1 Implement `generateSummaryStory(summary)` → `string`
+- [x] 6. Create `story.js` — narrative templates
+  - [x] 6.1 Implement `generateSummaryStory(summary)` → `string`
     - Return a short harmless ghost-story paragraph referencing real protocol counts and packet totals; always return a non-empty string
     - _Requirements: 5.2, 6.3_
 
-  - [~] 6.2 Implement `generateFindingStory(finding)` → `{ story, explanation, tip }`
+  - [x] 6.2 Implement `generateFindingStory(finding)` → `{ story, explanation, tip }`
     - Template-driven narration for all five finding types; name real hosts from `finding.hosts`; all three fields must always be non-empty strings
     - _Requirements: 6.1, 6.2, 6.4_
 
@@ -114,91 +114,91 @@ Migrate the Séance app from a text-log analyzer to a full packet-capture analyz
     - **Property 12: `generateFindingStory` returns non-empty strings for all five finding types**
     - **Validates: Requirements 5.2, 6.1, 6.5**
 
-  - [~] 6.4 Implement `generatePeacefulStory(summary)` → `string`
+  - [x] 6.4 Implement `generatePeacefulStory(summary)` → `string`
     - Return a short peaceful story for a clean capture with no findings; always a non-empty string
     - _Requirements: 6.5_
 
 - [ ] 7. Create `audio.js` — full audio synthesizer
-  - [~] 7.1 Move `initAudio()` from `app.js` to `audio.js`; keep the same signature and fallback logic
+  - [ ] 7.1 Move `initAudio()` from `app.js` to `audio.js`; keep the same signature and fallback logic
     - Delete the stub in `app.js` once `audio.js` is loaded via script tag before `app.js`
     - _Requirements: 11.1, 11.2, 11.4_
 
-  - [~] 7.2 Implement `playDrone(durationSeconds)` → `DroneHandle` in `audio.js`
+  - [ ] 7.2 Implement `playDrone(durationSeconds)` → `DroneHandle` in `audio.js`
     - Two oscillators (`sine` ~40 Hz, `sawtooth` ~60 Hz) → `BiquadFilterNode` (lowpass 200 Hz, Q 5) → gain ramp 0 → 0.6
     - Return `{ stop() }` that ramps gain to 0.0001 over 0.3 s then disconnects
     - Remove the stub from `app.js`
     - _Requirements: 8.1, 11.1_
 
-  - [~] 7.3 Implement `playSting()` in `audio.js`
+  - [ ] 7.3 Implement `playSting()` in `audio.js`
     - Three oscillators at ~440 Hz (sawtooth), ~466 Hz (sawtooth), ~523 Hz (square) → `WaveShaperNode` (hard-clip) → gain (5 ms attack, exponential decay to 0.0001 over 0.4 s); auto-stop at 0.5 s
     - Remove the stub from `app.js`
     - _Requirements: 10.3, 11.1_
 
-  - [~] 7.4 Implement `stopAll()` and `setMute(muted)` in `audio.js`
+  - [ ] 7.4 Implement `stopAll()` and `setMute(muted)` in `audio.js`
     - `stopAll()`: stop any live DroneHandle and disconnect remaining nodes
     - `setMute(muted)`: set `masterGain.gain.value` to 0 or 1
     - Remove stub from `app.js`; update mute-button handler in `app.js` to call `setMute()`
     - _Requirements: 11.3, 12.2_
 
 - [ ] 8. Update `app.js` — pcap pipeline and UI wiring
-  - [~] 8.1 Expand state object with `packets`, `summary`, and `findings` fields
+  - [ ] 8.1 Expand state object with `packets`, `summary`, and `findings` fields
     - Add `packets: null`, `summary: null`, `findings: []` alongside existing fields
     - _Requirements: 10.5, 10.6, 12.2_
 
-  - [~] 8.2 Implement file-load entry point: `FileReader` + File API
+  - [ ] 8.2 Implement file-load entry point: `FileReader` + File API
     - Read the selected or dropped `.pcap` file as `ArrayBuffer` via `FileReader.readAsArrayBuffer`
     - Check `byteLength` ≤ 5 MB before parsing; call `showErrorMessage()` if too large
     - Call `summon(arrayBuffer)` on success
     - Wire `<input type="file">` `change` event and `#drop-zone` drag-and-drop events (`dragenter`, `dragover`, `dragleave`, `drop`)
     - _Requirements: 1.1, 1.5_
 
-  - [~] 8.3 Rewrite `summon(arrayBuffer)` to use the pcap pipeline
+  - [ ] 8.3 Rewrite `summon(arrayBuffer)` to use the pcap pipeline
     - Accept `ArrayBuffer` instead of `logText`
     - Call `parsePcap(arrayBuffer)`; catch `{ type: 'PCAPNG' }` → `showPcapngMessage()`; catch `{ type: 'INVALID' }` → `showErrorMessage(msg)`
     - On success: call `buildSummary(packets)`, `runDetectors(packets)`; store into `state`; set `strikeArmed = findings.some(f => f.severity === 'high')`
     - Start planchette walk across recon → dns → cleartext → lateral zones
     - _Requirements: 1.2, 3.1, 3.5, 4.1–4.5, 8.1_
 
-  - [~] 8.4 Rename `copyFix()` to `copySummary()` and update to copy summary text
+  - [ ] 8.4 Rename `copyFix()` to `copySummary()` and update to copy summary text
     - Read summary text from `#summary-panel` instead of `#surface-fix`
     - Arm the 4 s strike timer if `strikeArmed`
     - Update the DOMContentLoaded handler to listen on `#copy-summary-btn`
     - _Requirements: 9.1, 9.2, 10.1_
 
-  - [~] 8.5 Rewrite `_tensionComplete()` to call `showSummary()`
+  - [ ] 8.5 Rewrite `_tensionComplete()` to call `showSummary()`
     - After stopping the drone and switching to parchment mode, call `showSummary(state.summary, storyText)` where `storyText` comes from `generateSummaryStory(state.summary)`
     - _Requirements: 8.2, 8.3_
 
-  - [~] 8.6 Implement `showSummary(summary, storyText)` UI function
+  - [ ] 8.6 Implement `showSummary(summary, storyText)` UI function
     - Populate `#summary-panel` with packet count, duration, protocol breakdown, top talkers, and the story paragraph — all via `textContent`
     - Show `#result-panel` and the "Copy Summary" button
     - _Requirements: 5.1, 5.2, 5.3_
 
-  - [~] 8.7 Implement `showFindings(findings)` UI function for the strike reveal
+  - [ ] 8.7 Implement `showFindings(findings)` UI function for the strike reveal
     - For each finding call `generateFindingStory(finding)` and render story, explanation, and tip into `#findings-list` using `textContent`
     - If `findings` is empty, call `generatePeacefulStory(state.summary)` and show it instead
     - _Requirements: 6.1, 10.4, 10.6_
 
-  - [~] 8.8 Implement `showPcapngMessage()` and `showErrorMessage(msg)` UI functions
+  - [ ] 8.8 Implement `showPcapngMessage()` and `showErrorMessage(msg)` UI functions
     - `showPcapngMessage()`: reveal `#pcapng-msg` with in-theme instructions for exporting to classic pcap; auto-hide after 6 s
     - `showErrorMessage(msg)`: reveal `#error-msg` with the provided message; auto-hide after 5 s
     - Both keep `state.phase === 'idle'`
     - _Requirements: 1.4, 1.5_
 
-  - [~] 8.9 Update `_triggerStrike()` to call `showFindings()` after the flash
+  - [ ] 8.9 Update `_triggerStrike()` to call `showFindings()` after the flash
     - Replace the existing `showHiddenFinding(state.result.hidden)` call with `showFindings(state.findings)`
     - _Requirements: 10.3, 10.4_
 
-  - [~] 8.10 Update `reset()` to clear new state fields and hide new panels
+  - [ ] 8.10 Update `reset()` to clear new state fields and hide new panels
     - Clear `packets`, `summary`, `findings`; hide `#summary-panel`, `#findings-list`, `#pcapng-msg`, `#error-msg`
     - _Requirements: 12.1, 12.2_
 
-  - [~] 8.11 Update `loadSampleCapture(name, buffer)` wiring for the three pcap sample buttons
+  - [ ] 8.11 Update `loadSampleCapture(name, buffer)` wiring for the three pcap sample buttons
     - Wire "The Quiet House" → `generateQuietHouseCapture()`, "The Knocking Visitor" → `generateKnockingVisitorCapture()`, "The Whispering Wire" → `generateWhisperingWireCapture()`
     - Show capture name and packet count after loading
     - _Requirements: 2.1, 2.2, 2.3_
 
-- [~] 9. Checkpoint — Smoke test the full 3-beat loop
+- [ ] 9. Checkpoint — Smoke test the full 3-beat loop
   - Ensure all tests pass, ask the user if questions arise.
   - Open `index.html` in a browser; verify: file picker, drag-and-drop, all three sample captures, planchette walk, parchment flip, copy summary, 4 s timer, pointer trigger, flash + sting + planchette slam, findings reveal, mute toggle, reset
 
@@ -225,7 +225,7 @@ Migrate the Séance app from a text-log analyzer to a full packet-capture analyz
     - Load fast-check from CDN; import and run all property tests in one page
     - _Requirements: 3.6_
 
-- [~] 11. Final checkpoint — All tests pass and app is production-ready
+- [ ] 11. Final checkpoint — All tests pass and app is production-ready
   - Ensure all tests pass, ask the user if questions arise.
   - Verify static-file hosting: open via `file://` and confirm no missing-script errors
   - Confirm all script tags load in correct order, no ES module imports, no external audio files
