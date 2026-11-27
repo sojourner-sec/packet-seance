@@ -7,16 +7,24 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Contrast audit (WCAG AA ≥ 4.5:1) ──────────────────────────────────────
+   Computed with WCAG 2.1 relative luminance formula.
+
    Dark séance theme (bg #0a0705):
-     --text-primary  #e8d5a0 → ~13.1:1  ✓
-     --text-secondary #b8955e → ~6.5:1  ✓
-     --text-muted    #7a6040 → ~3.8:1   used only for decorative .samples-label;
-                                        all interactive / body text uses text-primary or text-secondary
-     Zone labels (#c9922a) on board bg #1a1108 → ~6.2:1  ✓
+     --text-primary  #e8d5a0 → 13.83:1  ✓
+     --text-secondary #b8955e →  7.17:1  ✓
+     --text-muted    #7a6040 →  3.42:1   used only for decorative labels
+                                          (e.g. .samples-label, .summary-stat-label);
+                                          all body / interactive text uses primary or secondary
+     Zone labels (#c9922a) on board bg #1a1108 → 6.77:1  ✓
+     .finding-tip  #d08060 on card bg  #1e150a → 5.95:1  ✓
+     .finding-story / .summary-story (--text-primary) on #1e150a → 12.39:1  ✓
+
    Parchment mode (bg #f5ead0):
-     --text-primary  #3b2a14 → ~11.2:1  ✓
-     --text-secondary #7a4e18 → ~5.5:1  ✓
-     --text-muted    #6b4e28 → ~4.8:1   ✓
+     --text-primary  #3b2a14 → 11.50:1  ✓
+     --text-secondary #7a4e18 →  5.99:1  ✓
+     --text-muted    #6b4e28 →  6.40:1  ✓
+     .finding-tip override #5a2e0a on card #f5e0d8 → 9.04:1  ✓
+
    Both themes meet ≥ 4.5:1 for all body and interactive text.
    ─────────────────────────────────────────────────────────────────────────── */
 

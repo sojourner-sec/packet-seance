@@ -202,7 +202,7 @@ Migrate the Séance app from a text-log analyzer to a full packet-capture analyz
   - Ensure all tests pass, ask the user if questions arise.
   - Open `index.html` in a browser; verify: file picker, drag-and-drop, all three sample captures, planchette walk, parchment flip, copy summary, 4 s timer, pointer trigger, flash + sting + planchette slam, findings reveal, mute toggle, reset
 
-- [ ] 10. Property-based tests (optional)
+- [x] 10. Property-based tests (optional)
   - [ ]* 10.1 Write tests for Properties 1–4 (parsePcap invariants)
     - **Property 1: Parser handles all supported magic numbers** — Validates: Requirements 3.1
     - **Property 2: Parser rejects pcapng** — Validates: Requirements 1.4
@@ -225,7 +225,7 @@ Migrate the Séance app from a text-log analyzer to a full packet-capture analyz
     - Load fast-check from CDN; import and run all property tests in one page
     - _Requirements: 3.6_
 
-- [ ] 11. Final checkpoint — All tests pass and app is production-ready
+- [x] 11. Final checkpoint — All tests pass and app is production-ready
   - Ensure all tests pass, ask the user if questions arise.
   - Verify static-file hosting: open via `file://` and confirm no missing-script errors
   - Confirm all script tags load in correct order, no ES module imports, no external audio files

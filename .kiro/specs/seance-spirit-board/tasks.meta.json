@@ -914,6 +914,16 @@
         "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
         "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
         "timestamp": 1795628102572
+      },
+      {
+        "executionId": "9b9d9341-7dbe-42fe-b359-f6e816e0014d",
+        "chatSessionId": "sess_cf6c023f-0b47-4a11-9fb3-842bfaef0125",
+        "timestamp": 1795797718160
+      },
+      {
+        "executionId": "9b9d9341-7dbe-42fe-b359-f6e816e0014d",
+        "chatSessionId": "sess_cf6c023f-0b47-4a11-9fb3-842bfaef0125",
+        "timestamp": 1795798335073
       }
     ],
     "3. Create `samples.js` — three synthetic pcap generators": [
@@ -971,6 +981,23 @@
         "executionId": "a27b9204-c042-4f17-8c34-720fac5b4cfb",
         "chatSessionId": "sess_5658aaa5-d625-4ef8-af93-54895fc12647",
         "timestamp": 1795740409823
+      }
+    ],
+    "10. Property-based tests (optional)": [
+      {
+        "executionId": "a9a00748-641e-4478-8bd2-82162b1150b1",
+        "chatSessionId": "sess_ee58e05f-1539-4372-b17e-2328374c109e",
+        "timestamp": 1795794444334
+      },
+      {
+        "executionId": "4283d219-aa09-4174-83d2-82c34f70791b",
+        "chatSessionId": "sess_6a971d3d-21ab-48b3-bd12-89b31a9bed52",
+        "timestamp": 1795796103350
+      },
+      {
+        "executionId": "4283d219-aa09-4174-83d2-82c34f70791b",
+        "chatSessionId": "sess_6a971d3d-21ab-48b3-bd12-89b31a9bed52",
+        "timestamp": 1795796856926
       }
     ]
   }

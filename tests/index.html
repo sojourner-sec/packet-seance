@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Packet Séance — Property Tests</title>
+  <style>
+    body {
+      font-family: 'Georgia', serif;
+      background: #1a1109;
+      color: #e8dcc8;
+      margin: 0;
+      padding: 1.5rem 2rem;
+    }
+    h1 { color: #c9a84c; margin-bottom: 0.25rem; }
+    p.subtitle { color: #9b8a6e; margin-top: 0; margin-bottom: 1.5rem; font-style: italic; }
+    #summary {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      padding: 0.6rem 1rem;
+      border-left: 4px solid #c9a84c;
+      background: #261a08;
+    }
+    .result {
+      padding: 0.35rem 0.6rem;
+      margin: 0.2rem 0;
+      border-radius: 3px;
+      font-size: 0.88rem;
+      font-family: 'Courier New', monospace;
+    }
+    .result.pass { background: #0d2b12; color: #6fcf7c; }
+    .result.fail { background: #2b0d0d; color: #f47e7e; }
+    .result.pass::before { content: '✓  '; }
+    .result.fail::before { content: '✗  '; }
+    .error-detail {
+      margin: 0.1rem 0 0.4rem 2.5rem;
+      color: #e08080;
+      font-size: 0.8rem;
+      font-family: 'Courier New', monospace;
+      white-space: pre-wrap;
+    }
+    h2 {
+      color: #9b8a6e;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 1.2rem 0 0.3rem;
+      border-bottom: 1px solid #3a2e1a;
+      padding-bottom: 0.2rem;
+    }
+    #output { margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+
+<h1>🕯 Packet Séance — Property Tests</h1>
+<p class="subtitle">Properties 1–12 · fast-check · no bundler · open in any browser</p>
+<div id="summary">Running tests…</div>
+<div id="output"></div>
+
+<!-- ── fast-check UMD — exposes window.fc, works from file:// ─────────────── -->
+<!-- jsDelivr serves the CJS build wrapped as UMD so window.fc is available.   -->
+<!-- Fallback: replace with the unpkg URL if this fails:                        -->
+<!--   https://unpkg.com/fast-check@3/lib/fast-check.min.js                    -->
+<script src="https://cdn.jsdelivr.net/npm/fast-check@3/lib/fast-check.min.js"></script>
+
+<!-- ── Production modules in dependency order ─────────────────────────────── -->
+<!-- audio.js and app.js are intentionally omitted: they require DOM / AudioContext -->
+<script src="../samples.js"></script>
+<script src="../pcap.js"></script>
+<script src="../detectors.js"></script>
+<script src="../story.js"></script>
+
+<!-- ── Test files — each assigns an array of {name, run} to a window global ── -->
+<script src="tests-pcap.js"></script>
+<script src="tests-detectors.js"></script>
+<script src="tests-story.js"></script>
+
+<!-- ── Runner — collects all suites, runs every test, renders results ─────── -->
+<script>
+  (function () {
+    var suites = [
+      { label: 'parsePcap invariants (Properties 1–4)',     tests: window.pcapTests },
+      { label: 'Detector invariants (Properties 5–8)',      tests: window.detectorTests },
+      { label: 'Story & state-machine (Properties 9–12)',   tests: window.storyTests },
+    ];
+
+    var totalPass = 0;
+    var totalFail = 0;
+    var outputEl  = document.getElementById('output');
+
+    suites.forEach(function (suite) {
+      var sectionHdr = document.createElement('h2');
+      sectionHdr.textContent = suite.label;
+      outputEl.appendChild(sectionHdr);
+
+      var tests = suite.tests || [];
+      tests.forEach(function (t) {
+        var ok    = false;
+        var error = null;
+
+        try {
+          t.run();
+          ok = true;
+        } catch (e) {
+          ok    = false;
+          error = (e && (e.message || e.toString())) || String(e);
+        }
+
+        if (ok) { totalPass++; } else { totalFail++; }
+
+        var row = document.createElement('div');
+        row.className = 'result ' + (ok ? 'pass' : 'fail');
+        row.textContent = t.name;
+        outputEl.appendChild(row);
+
+        if (!ok && error) {
+          var detail = document.createElement('div');
+          detail.className   = 'error-detail';
+          detail.textContent = error; // textContent — never innerHTML
+          outputEl.appendChild(detail);
+        }
+      });
+    });
+
+    // Summary banner
+    var summaryEl  = document.getElementById('summary');
+    var total      = totalPass + totalFail;
+    var summaryMsg = totalPass + ' passed';
+    if (totalFail > 0) { summaryMsg += ', ' + totalFail + ' failed'; }
+    summaryMsg += ' (of ' + total + ' total)';
+    summaryEl.textContent = summaryMsg;
+    summaryEl.style.borderLeftColor = totalFail > 0 ? '#e05c5c' : '#4caf50';
+  }());
+</script>
+
+</body>
+</html>
