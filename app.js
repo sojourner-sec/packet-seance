@@ -198,48 +198,6 @@ function analyzeLog(logText) {
 }
 
 
-// --- AUDIO ---
-
-// Stubs — full implementation in task 5.x
-
-/** @type {AudioContext|null} */
-let _audioContext = null;
-/** @type {GainNode|null} */
-let _masterGain = null;
-let audioDisabled = false;
-
-function initAudio() {
-  if (_audioContext || audioDisabled) return;
-  try {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) { audioDisabled = true; return; }
-    _audioContext = new Ctx();
-    _masterGain = _audioContext.createGain();
-    _masterGain.gain.value = 1;
-    _masterGain.connect(_audioContext.destination);
-  } catch (_) {
-    audioDisabled = true;
-  }
-}
-
-/**
- * @param {number} _durationSeconds
- * @returns {{ stop: () => void }}
- */
-function playDrone(_durationSeconds) {
-  // Full implementation in task 5.2
-  return { stop() {} };
-}
-
-function playSting() {
-  // Full implementation in task 5.3
-}
-
-function stopAll() {
-  // Full implementation in task 5.4
-}
-
-
 // --- STATE MACHINE ---
 
 /**
@@ -652,11 +610,10 @@ document.addEventListener('DOMContentLoaded', function () {
     reset();
   });
 
-  // Mute / Unmute toggle (task 5.4 / 7.2)
+  // Mute / Unmute toggle — delegates to audio.js setMute()
   document.getElementById('mute-btn').addEventListener('click', function () {
-    if (!_masterGain) return;
-    const isMuted = _masterGain.gain.value === 0;
-    _masterGain.gain.value = isMuted ? 1 : 0;
+    const isMuted = this.getAttribute('aria-pressed') === 'true';
+    setMute(!isMuted);
     this.textContent = isMuted ? '🔊 Mute' : '🔇 Unmute';
     this.setAttribute('aria-pressed', String(!isMuted));
     this.setAttribute('aria-label', isMuted ? 'Mute audio' : 'Unmute audio');

@@ -118,23 +118,23 @@ Migrate the Séance app from a text-log analyzer to a full packet-capture analyz
     - Return a short peaceful story for a clean capture with no findings; always a non-empty string
     - _Requirements: 6.5_
 
-- [ ] 7. Create `audio.js` — full audio synthesizer
-  - [ ] 7.1 Move `initAudio()` from `app.js` to `audio.js`; keep the same signature and fallback logic
+- [x] 7. Create `audio.js` — full audio synthesizer
+  - [x] 7.1 Move `initAudio()` from `app.js` to `audio.js`; keep the same signature and fallback logic
     - Delete the stub in `app.js` once `audio.js` is loaded via script tag before `app.js`
     - _Requirements: 11.1, 11.2, 11.4_
 
-  - [ ] 7.2 Implement `playDrone(durationSeconds)` → `DroneHandle` in `audio.js`
+  - [x] 7.2 Implement `playDrone(durationSeconds)` → `DroneHandle` in `audio.js`
     - Two oscillators (`sine` ~40 Hz, `sawtooth` ~60 Hz) → `BiquadFilterNode` (lowpass 200 Hz, Q 5) → gain ramp 0 → 0.6
     - Return `{ stop() }` that ramps gain to 0.0001 over 0.3 s then disconnects
     - Remove the stub from `app.js`
     - _Requirements: 8.1, 11.1_
 
-  - [ ] 7.3 Implement `playSting()` in `audio.js`
+  - [x] 7.3 Implement `playSting()` in `audio.js`
     - Three oscillators at ~440 Hz (sawtooth), ~466 Hz (sawtooth), ~523 Hz (square) → `WaveShaperNode` (hard-clip) → gain (5 ms attack, exponential decay to 0.0001 over 0.4 s); auto-stop at 0.5 s
     - Remove the stub from `app.js`
     - _Requirements: 10.3, 11.1_
 
-  - [ ] 7.4 Implement `stopAll()` and `setMute(muted)` in `audio.js`
+  - [x] 7.4 Implement `stopAll()` and `setMute(muted)` in `audio.js`
     - `stopAll()`: stop any live DroneHandle and disconnect remaining nodes
     - `setMute(muted)`: set `masterGain.gain.value` to 0 or 1
     - Remove stub from `app.js`; update mute-button handler in `app.js` to call `setMute()`
