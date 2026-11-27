@@ -198,7 +198,7 @@ Migrate the Séance app from a text-log analyzer to a full packet-capture analyz
     - Show capture name and packet count after loading
     - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ] 9. Checkpoint — Smoke test the full 3-beat loop
+- [x] 9. Checkpoint — Smoke test the full 3-beat loop
   - Ensure all tests pass, ask the user if questions arise.
   - Open `index.html` in a browser; verify: file picker, drag-and-drop, all three sample captures, planchette walk, parchment flip, copy summary, 4 s timer, pointer trigger, flash + sting + planchette slam, findings reveal, mute toggle, reset
 

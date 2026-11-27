@@ -183,72 +183,92 @@ function showSummary(summary, storyText) {
     prevFindings.hidden = true;
   }
 
-  // Packet count + duration heading.
-  // Duration is formatted to one decimal place with an 's' suffix, e.g. "3.2 s".
-  const hdr = document.createElement('p');
+  // Title heading.
+  const titleEl = document.createElement('h2');
+  titleEl.className   = 'summary-title';
+  titleEl.textContent = 'What the Wire Revealed';
+  panel.appendChild(titleEl);
+
+  // Ghost-story paragraph — shown first for narrative flow.
+  const story = document.createElement('p');
+  story.textContent = storyText;
+  story.className   = 'summary-story';
+  panel.appendChild(story);
+
+  // Stats grid: total packets, duration.
   const dur = summary.durationSeconds > 0
     ? (Math.round(summary.durationSeconds * 10) / 10).toFixed(1) + ' s'
     : 'a fleeting moment';
-  hdr.textContent = summary.totalPackets + ' packets over ' + dur;
-  hdr.className   = 'summary-header';
-  panel.appendChild(hdr);
 
-  // Protocol breakdown.
-  const protoHdr = document.createElement('p');
-  protoHdr.textContent = 'Protocols detected:';
-  protoHdr.className   = 'summary-section-label';
-  panel.appendChild(protoHdr);
+  const statsGrid = document.createElement('div');
+  statsGrid.className = 'summary-stats';
 
-  const counts  = summary.protocolCounts || {};
-  const protos  = ['tcp', 'udp', 'dns', 'icmp', 'arp', 'ipv4', 'unknown'];
-  const protoList = document.createElement('ul');
-  protoList.className = 'summary-list';
-  protos.forEach(function (proto) {
-    const n = counts[proto] || 0;
-    if (n === 0) return;
-    const li = document.createElement('li');
-    li.textContent = proto.toUpperCase() + ': ' + n;
-    protoList.appendChild(li);
-  });
-  if (protoList.childNodes.length > 0) panel.appendChild(protoList);
-
-  // Top talkers (up to 5).
-  const talkers = summary.topTalkers || [];
-  if (talkers.length > 0) {
-    const talkHdr = document.createElement('p');
-    talkHdr.textContent = 'Top talkers:';
-    talkHdr.className   = 'summary-section-label';
-    panel.appendChild(talkHdr);
-
-    const talkList = document.createElement('ul');
-    talkList.className = 'summary-list';
-    talkers.slice(0, 5).forEach(function (t) {
-      const li = document.createElement('li');
-      li.textContent = t.ip + ' — ' + t.count + ' packets';
-      talkList.appendChild(li);
-    });
-    panel.appendChild(talkList);
+  function _addStat(label, value) {
+    const cell = document.createElement('div');
+    cell.className = 'summary-stat';
+    const lbl = document.createElement('span');
+    lbl.className   = 'summary-stat-label';
+    lbl.textContent = label;
+    const val = document.createElement('span');
+    val.className   = 'summary-stat-value';
+    val.textContent = value;
+    cell.appendChild(lbl);
+    cell.appendChild(val);
+    statsGrid.appendChild(cell);
   }
 
-  // Truncation / skipped notice.
+  _addStat('Packets', String(summary.totalPackets));
+  _addStat('Duration', dur);
+
+  // Protocol breakdown as stat cells.
+  const counts  = summary.protocolCounts || {};
+  const protos  = ['tcp', 'udp', 'dns', 'icmp', 'arp', 'ipv4', 'unknown'];
+  protos.forEach(function (proto) {
+    const n = counts[proto] || 0;
+    if (n > 0) _addStat(proto.toUpperCase(), String(n));
+  });
+
+  panel.appendChild(statsGrid);
+
+  // Truncation / skipped notices.
   if (summary.truncated) {
     const truncNote = document.createElement('p');
     truncNote.textContent = 'Note: capture truncated to 50,000 packets.';
-    truncNote.className   = 'summary-note';
+    truncNote.className   = 'summary-story';
     panel.appendChild(truncNote);
   }
   if (summary.skipped > 0) {
     const skipNote = document.createElement('p');
     skipNote.textContent = summary.skipped + ' malformed packets skipped.';
-    skipNote.className   = 'summary-note';
+    skipNote.className   = 'summary-story';
     panel.appendChild(skipNote);
   }
 
-  // Ghost-story paragraph.
-  const story = document.createElement('p');
-  story.textContent = storyText;
-  story.className   = 'summary-story';
-  panel.appendChild(story);
+  // Top talkers.
+  const talkers = summary.topTalkers || [];
+  if (talkers.length > 0) {
+    const talkSection = document.createElement('div');
+    talkSection.className = 'summary-talkers';
+
+    const talkHdr = document.createElement('p');
+    talkHdr.textContent = 'Top talkers';
+    talkHdr.className   = 'summary-talkers-title';
+    talkSection.appendChild(talkHdr);
+
+    talkers.slice(0, 5).forEach(function (t) {
+      const row = document.createElement('div');
+      row.className = 'summary-talker';
+      const ipSpan = document.createElement('span');
+      ipSpan.textContent = t.ip;
+      const countSpan = document.createElement('span');
+      countSpan.textContent = t.count + ' pkts';
+      row.appendChild(ipSpan);
+      row.appendChild(countSpan);
+      talkSection.appendChild(row);
+    });
+
+    panel.appendChild(talkSection);
+  }
 
   // Reveal panels.
   const resultPanel = document.getElementById('result-panel');
@@ -288,7 +308,7 @@ function showFindings(findings) {
     const narratives = generateFindingStory(finding);
 
     const card = document.createElement('div');
-    card.className = 'finding';
+    card.className = 'finding finding-card finding-card--' + (finding.severity || 'medium');
 
     const title = document.createElement('h3');
     title.textContent = _typeToLabel(finding.type || 'Unknown');
@@ -305,13 +325,21 @@ function showFindings(findings) {
     card.appendChild(storyP);
 
     const explP = document.createElement('p');
-    explP.className   = 'finding-explanation';
-    explP.textContent = narratives.explanation;
+    explP.className = 'finding-explanation';
+    const explLabel = document.createElement('span');
+    explLabel.className   = 'finding-explanation-label';
+    explLabel.textContent = 'What really happened';
+    explP.appendChild(explLabel);
+    explP.appendChild(document.createTextNode(narratives.explanation));
     card.appendChild(explP);
 
     const tipP = document.createElement('p');
-    tipP.className   = 'finding-tip';
-    tipP.textContent = narratives.tip;
+    tipP.className = 'finding-tip';
+    const tipLabel = document.createElement('span');
+    tipLabel.className   = 'finding-tip-label';
+    tipLabel.textContent = "Defender's tip";
+    tipP.appendChild(tipLabel);
+    tipP.appendChild(document.createTextNode(narratives.tip));
     card.appendChild(tipP);
 
     list.appendChild(card);
@@ -340,6 +368,12 @@ function _tensionComplete() {
   setPhase('calm');
   document.body.classList.add('parchment-mode');
   showSummary(state.summary, generateSummaryStory(state.summary));
+
+  // If no high-severity findings exist, reveal medium (or no) findings now.
+  // High-severity findings are revealed only via the strike.
+  if (!state.strikeArmed) {
+    showFindings(state.findings);
+  }
 }
 
 // ─── _triggerStrike (8.9) ─────────────────────────────────────────────────────
@@ -450,6 +484,7 @@ function reset() {
 
   document.body.dataset.phase = 'idle';
   document.body.classList.remove('parchment-mode');
+  document.body.classList.remove('invert-flash');
 
   // Hide result panels.
   const toHide = ['result-panel', 'summary-panel', 'findings-list',
@@ -458,6 +493,10 @@ function reset() {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
+
+  // Hide the copy row.
+  const copyRow = document.querySelector('.copy-row');
+  if (copyRow) copyRow.hidden = true;
 
   // Clear dynamic content.
   const findingsList = document.getElementById('findings-list');
@@ -520,6 +559,11 @@ function _resetDropZoneLabel() {
 // ─── loadSampleCapture (8.11) ─────────────────────────────────────────────────
 
 function loadSampleCapture(name, buffer) {
+  // If a previous analysis is in progress, reset cleanly before starting a new one.
+  if (state.phase !== 'idle') {
+    reset();
+  }
+
   initAudio();
 
   // Show the sample name in the drop-zone label.
@@ -553,6 +597,10 @@ function _readFileAsBuffer(file) {
     showErrorMessage('The spirits are overwhelmed\u2026 Please use a file under 5\u00a0MB.');
     return;
   }
+  // If a previous analysis is running, reset before loading a new file.
+  if (state.phase !== 'idle') {
+    reset();
+  }
   const reader = new FileReader();
   reader.onload = function (e) {
     state._pendingBuffer = e.target.result;
@@ -567,6 +615,9 @@ function _readFileAsBuffer(file) {
 // ─── DOMContentLoaded — wire all events ──────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', function () {
+
+  // Set initial planchette position (recon zone) so it's not stuck at 0,0.
+  setPlanchetteZone('recon');
 
   // ── File input (8.2) ────────────────────────────────────────────────────────
   const fileInput = document.getElementById('file-input');
