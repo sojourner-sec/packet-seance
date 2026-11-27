@@ -710,6 +710,16 @@
         "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
         "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
         "timestamp": 1795628101471
+      },
+      {
+        "executionId": "03dec4ed-98ba-4d24-9863-7cbcfce3ae35",
+        "chatSessionId": "sess_e33c94fd-3aed-4aa1-8627-d01049b9fce6",
+        "timestamp": 1795740508991
+      },
+      {
+        "executionId": "03dec4ed-98ba-4d24-9863-7cbcfce3ae35",
+        "chatSessionId": "sess_e33c94fd-3aed-4aa1-8627-d01049b9fce6",
+        "timestamp": 1795740525377
       }
     ],
     "8.2 Implement file-load entry point: `FileReader` + File API": [
@@ -717,6 +727,16 @@
         "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
         "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
         "timestamp": 1795628101555
+      },
+      {
+        "executionId": "e4d85a08-17ae-467e-a319-c9cff79bc1c9",
+        "chatSessionId": "sess_ffc34b3b-8b45-4652-912b-efa113852709",
+        "timestamp": 1795740570864
+      },
+      {
+        "executionId": "e4d85a08-17ae-467e-a319-c9cff79bc1c9",
+        "chatSessionId": "sess_ffc34b3b-8b45-4652-912b-efa113852709",
+        "timestamp": 1795740578541
       }
     ],
     "8.3 Rewrite `summon(arrayBuffer)` to use the pcap pipeline": [
@@ -724,6 +744,16 @@
         "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
         "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
         "timestamp": 1795628101632
+      },
+      {
+        "executionId": "e9c4c046-843b-407d-9593-9e8f1d14f8e8",
+        "chatSessionId": "sess_a364657d-16ed-4a06-9b9a-3ee7019d077a",
+        "timestamp": 1795740591518
+      },
+      {
+        "executionId": "e9c4c046-843b-407d-9593-9e8f1d14f8e8",
+        "chatSessionId": "sess_a364657d-16ed-4a06-9b9a-3ee7019d077a",
+        "timestamp": 1795740608302
       }
     ],
     "8.4 Rename `copyFix()` to `copySummary()` and update to copy summary text": [
@@ -731,6 +761,16 @@
         "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
         "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
         "timestamp": 1795628101734
+      },
+      {
+        "executionId": "e888bc15-f9e5-4672-995f-94aa516ae939",
+        "chatSessionId": "sess_8d01a0d5-2e51-4e6a-a4ec-37e5fa877438",
+        "timestamp": 1795740619731
+      },
+      {
+        "executionId": "e888bc15-f9e5-4672-995f-94aa516ae939",
+        "chatSessionId": "sess_8d01a0d5-2e51-4e6a-a4ec-37e5fa877438",
+        "timestamp": 1795740641875
       }
     ],
     "8.5 Rewrite `_tensionComplete()` to call `showSummary()`": [
@@ -738,6 +778,16 @@
         "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
         "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
         "timestamp": 1795628101832
+      },
+      {
+        "executionId": "9ca92f7d-107c-4ef0-bd00-6f6a1153ac6c",
+        "chatSessionId": "sess_6f1a49a9-2bde-496a-b7e9-65c89c737ef2",
+        "timestamp": 1795740653924
+      },
+      {
+        "executionId": "9ca92f7d-107c-4ef0-bd00-6f6a1153ac6c",
+        "chatSessionId": "sess_6f1a49a9-2bde-496a-b7e9-65c89c737ef2",
+        "timestamp": 1795740680508
       }
     ],
     "8.6 Implement `showSummary(summary, storyText)` UI function": [
@@ -745,6 +795,16 @@
         "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
         "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
         "timestamp": 1795628101913
+      },
+      {
+        "executionId": "7caa9a6b-f920-404b-86ee-7f3597d57a2d",
+        "chatSessionId": "sess_b06ffb65-3cc0-410a-a572-71b83eb679ab",
+        "timestamp": 1795740690233
+      },
+      {
+        "executionId": "7caa9a6b-f920-404b-86ee-7f3597d57a2d",
+        "chatSessionId": "sess_b06ffb65-3cc0-410a-a572-71b83eb679ab",
+        "timestamp": 1795740776842
       }
     ],
     "8.7 Implement `showFindings(findings)` UI function for the strike reveal": [
@@ -752,6 +812,16 @@
         "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
         "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
         "timestamp": 1795628101995
+      },
+      {
+        "executionId": "87d0b3c5-99c8-4067-8286-b60123cfa46b",
+        "chatSessionId": "sess_4da0a75c-bb74-43ce-a9ee-68ebec97c6ef",
+        "timestamp": 1795740790428
+      },
+      {
+        "executionId": "87d0b3c5-99c8-4067-8286-b60123cfa46b",
+        "chatSessionId": "sess_4da0a75c-bb74-43ce-a9ee-68ebec97c6ef",
+        "timestamp": 1795740813034
       }
     ],
     "8.8 Implement `showPcapngMessage()` and `showErrorMessage(msg)` UI functions": [
@@ -759,6 +829,16 @@
         "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
         "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
         "timestamp": 1795628102116
+      },
+      {
+        "executionId": "2fb8eec6-5af6-4958-b669-ea385699fd0d",
+        "chatSessionId": "sess_61b9a3e6-cbad-4a25-af41-1b292685032f",
+        "timestamp": 1795740830106
+      },
+      {
+        "executionId": "2fb8eec6-5af6-4958-b669-ea385699fd0d",
+        "chatSessionId": "sess_61b9a3e6-cbad-4a25-af41-1b292685032f",
+        "timestamp": 1795741206544
       }
     ],
     "8.9 Update `_triggerStrike()` to call `showFindings()` after the flash": [
@@ -766,6 +846,16 @@
         "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
         "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
         "timestamp": 1795628102235
+      },
+      {
+        "executionId": "b14c6160-a74b-4269-8b6a-ebbe9a2505b7",
+        "chatSessionId": "sess_ba9046aa-ba0f-452c-b566-82e65d867084",
+        "timestamp": 1795741261678
+      },
+      {
+        "executionId": "b14c6160-a74b-4269-8b6a-ebbe9a2505b7",
+        "chatSessionId": "sess_ba9046aa-ba0f-452c-b566-82e65d867084",
+        "timestamp": 1795741283033
       }
     ],
     "8.10 Update `reset()` to clear new state fields and hide new panels": [
@@ -773,6 +863,16 @@
         "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
         "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
         "timestamp": 1795628102320
+      },
+      {
+        "executionId": "f82e5ff5-95ac-4ed2-bb2f-3a582b638798",
+        "chatSessionId": "sess_3ad8a4d2-890a-426f-a60d-a94d8a31886f",
+        "timestamp": 1795741441966
+      },
+      {
+        "executionId": "f82e5ff5-95ac-4ed2-bb2f-3a582b638798",
+        "chatSessionId": "sess_3ad8a4d2-890a-426f-a60d-a94d8a31886f",
+        "timestamp": 1795741482867
       }
     ],
     "8.11 Update `loadSampleCapture(name, buffer)` wiring for the three pcap sample buttons": [
@@ -780,6 +880,16 @@
         "executionId": "ea2f0ed8-940d-4bdd-8845-9e0f71fac026",
         "chatSessionId": "sess_0add5f39-3847-4f98-9434-465b9a67dd79",
         "timestamp": 1795628102404
+      },
+      {
+        "executionId": "a79840fa-a917-45ad-a256-5d457a384d29",
+        "chatSessionId": "sess_1002fb9b-8c6d-4d8d-85df-5cf026f26ce9",
+        "timestamp": 1795741513295
+      },
+      {
+        "executionId": "a79840fa-a917-45ad-a256-5d457a384d29",
+        "chatSessionId": "sess_1002fb9b-8c6d-4d8d-85df-5cf026f26ce9",
+        "timestamp": 1795741563470
       }
     ],
     "9. Checkpoint — Smoke test the full 3-beat loop": [
@@ -839,6 +949,18 @@
         "executionId": "ab66d8b3-ec47-46d8-b2c1-0ae622c4cf94",
         "chatSessionId": "sess_ae138919-508a-4922-b584-e82612dc2902",
         "timestamp": 1795740103775
+      }
+    ],
+    "8. Update `app.js` — pcap pipeline and UI wiring": [
+      {
+        "executionId": "a27b9204-c042-4f17-8c34-720fac5b4cfb",
+        "chatSessionId": "sess_5658aaa5-d625-4ef8-af93-54895fc12647",
+        "timestamp": 1795740260221
+      },
+      {
+        "executionId": "a27b9204-c042-4f17-8c34-720fac5b4cfb",
+        "chatSessionId": "sess_5658aaa5-d625-4ef8-af93-54895fc12647",
+        "timestamp": 1795740409823
       }
     ]
   }
